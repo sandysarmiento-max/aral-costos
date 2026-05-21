@@ -6,7 +6,8 @@
     <title>Aral Costos</title>
 <meta name="application-name" content="Aral Costos">
 <meta name="apple-mobile-web-app-title" content="Aral Costos">
-    
+    <meta name="theme-color" content="#EFC2B8">
+<link rel="manifest" href="site.webmanifest">
     <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAA+0449AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAMUExURf///8fM0+Pk5u3v8f//4S8AAAABdFJOUwBA5thmAAAACXBIWXMAAAsTAAALEwEAmpwYAAACTklEQVR4nO2byXqDMBBF45YAGZqW//89p3RBAghmB4M937p6j45K56ZUIv66wQ47bM+Sj54jFm5D3w9bAHAy0Nis67856ePj4wMvB5oX+35w4gB7e373MHAQALwMNC72fcLgN4CHh8X5/P1i1X+3w87bHjhLh8f3l+C9B/iG8fQ/6f/uG3w/eHiYf/5uE5T9Bf66H/uT4WvH/oWw/S96/4Gwf3wN3D/B9o+vgftT8H4Q2D++Bu4fwftB4D4I7R9vA/en4P0gsH88H7h/gn8B2D+eDtw/wT8E7B9PBu4b/E3w/Xj6S/E3wbfj6S/A94u7B9+Ppz+EfxP8O57+CP5N8O94+gPwB9p78H2U9wfgE+UdwJ9or8H3Ud4fwInyDvAn2kvwfZT3B+AT5U3An2ivwPdR3h+AT5Q3AX+ivQTfR3l/AD5R3gH8ivYSfB/l/QH4RHkH8Cfau8D7KO9S3F285yH4I8ZzHqG8X0Xv7rO5A7p/4H2UdwBv4H0X7Y3on6A/3b/bXWf8m6/ZfX6//S9n9/nd3//O+/yW+0n+RPlzBf/S9q8Yf4/xYf9pA4UfM1D4G5qB4q8qA8Xf5zJQ/KN0oPjnUAGKf8sUKP7f4H/Wv5G427/vBwpvBwovDwpvCwoXvXvIqf4wK5wNVDvU6A6zI9XOnnLqP80q5zIruOzd6jLpMqu8y6ywMqs8793KMpXpMqs874vKdOYyv+/dyr5Mn/eOZZm+7B3LMn3ZO9Zlmsm9W9mbN7mNf4f/AByZ6g5j68YIAAAAAElFTkSuQmCC">
     <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAA+0449AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAMUExURf///8fM0+Pk5u3v8f//4S8AAAABdFJOUwBA5thmAAAACXBIWXMAAAsTAAALEwEAmpwYAAACTklEQVR4nO2byXqDMBBF45YAGZqW//89p3RBAghmB4M937p6j45K56ZUIv66wQ47bM+Sj54jFm5D3w9bAHAy0Nis67856ePj4wMvB5oX+35w4gB7e373MHAQALwMNC72fcLgN4CHh8X5/P1i1X+3w87bHjhLh8f3l+C9B/iG8fQ/6f/uG3w/eHiYf/5uE5T9Bf66H/uT4WvH/oWw/S96/4Gwf3wN3D/B9o+vgftT8H4Q2D++Bu4fwftB4D4I7R9vA/en4P0gsH88H7h/gn8B2D+eDtw/wT8E7B9PBu4b/E3w/Xj6S/E3wbfj6S/A94u7B9+Ppz+EfxP8O57+CP5N8O94+gPwB9p78H2U9wfgE+UdwJ9or8H3Ud4fwInyDvAn2kvwfZT3B+AT5U3An2ivwPdR3h+AT5Q3AX+ivQTfR3l/AD5R3gH8ivYSfB/l/QH4RHkH8Cfau8D7KO9S3F285yH4I8ZzHqG8X0Xv7rO5A7p/4H2UdwBv4H0X7Y3on6A/3b/bXWf8m6/ZfX6//S9n9/nd3//O+/yW+0n+RPlzBf/S9q8Yf4/xYf9pA4UfM1D4G5qB4q8qA8Xf5zJQ/KN0oPjnUAGKf8sUKP7f4H/Wv5G427/vBwpvBwovDwpvCwoXvXvIqf4wK5wNVDvU6A6zI9XOnnLqP80q5zIruOzd6jLpMqu8y6ywMqs8793KMpXpMqs874vKdOYyv+/dyr5Mn/eOZZm+7B3LMn3ZO9Zlmsm9W9mbN7mNf4f/AByZ6g5j68YIAAAAAElFTkSuQmCC">
 
@@ -521,6 +522,15 @@
 
     recalcularGastosVariables();
     renderizarMaterialesProducto();
+</script>
+    <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./service-worker.js")
+        .then(() => console.log("Aral Costos lista para funcionar offline"))
+        .catch((error) => console.log("Error registrando service worker:", error));
+    });
+  }
 </script>
 </body>
 </html>
