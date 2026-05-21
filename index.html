@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AralCostos</title>
+    
+    <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAA+0449AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAMUExURf///8fM0+Pk5u3v8f//4S8AAAABdFJOUwBA5thmAAAACXBIWXMAAAsTAAALEwEAmpwYAAACTklEQVR4nO2byXqDMBBF45YAGZqW//89p3RBAghmB4M937p6j45K56ZUIv66wQ47bM+Sj54jFm5D3w9bAHAy0Nis67856ePj4wMvB5oX+35w4gB7e373MHAQALwMNC72fcLgN4CHh8X5/P1i1X+3w87bHjhLh8f3l+C9B/iG8fQ/6f/uG3w/eHiYf/5uE5T9Bf66H/uT4WvH/oWw/S96/4Gwf3wN3D/B9o+vgftT8H4Q2D++Bu4fwftB4D4I7R9vA/en4P0gsH88H7h/gn8B2D+eDtw/wT8E7B9PBu4b/E3w/Xj6S/E3wbfj6S/A94u7B9+Ppz+EfxP8O57+CP5N8O94+gPwB9p78H2U9wfgE+UdwJ9or8H3Ud4fwInyDvAn2kvwfZT3B+AT5U3An2ivwPdR3h+AT5Q3AX+ivQTfR3l/AD5R3gH8ivYSfB/l/QH4RHkH8Cfau8D7KO9S3F285yH4I8ZzHqG8X0Xv7rO5A7p/4H2UdwBv4H0X7Y3on6A/3b/bXWf8m6/ZfX6//S9n9/nd3//O+/yW+0n+RPlzBf/S9q8Yf4/xYf9pA4UfM1D4G5qB4q8qA8Xf5zJQ/KN0oPjnUAGKf8sUKP7f4H/Wv5G427/vBwpvBwovDwpvCwoXvXvIqf4wK5wNVDvU6A6zI9XOnnLqP80q5zIruOzd6jLpMqu8y6ywMqs8793KMpXpMqs874vKdOYyv+/dyr5Mn/eOZZm+7B3LMn3ZO9Zlmsm9W9mbN7mNf4f/AByZ6g5j68YIAAAAAElFTkSuQmCC">
+    <link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAMAAAA+0449AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAMUExURf///8fM0+Pk5u3v8f//4S8AAAABdFJOUwBA5thmAAAACXBIWXMAAAsTAAALEwEAmpwYAAACTklEQVR4nO2byXqDMBBF45YAGZqW//89p3RBAghmB4M937p6j45K56ZUIv66wQ47bM+Sj54jFm5D3w9bAHAy0Nis67856ePj4wMvB5oX+35w4gB7e373MHAQALwMNC72fcLgN4CHh8X5/P1i1X+3w87bHjhLh8f3l+C9B/iG8fQ/6f/uG3w/eHiYf/5uE5T9Bf66H/uT4WvH/oWw/S96/4Gwf3wN3D/B9o+vgftT8H4Q2D++Bu4fwftB4D4I7R9vA/en4P0gsH88H7h/gn8B2D+eDtw/wT8E7B9PBu4b/E3w/Xj6S/E3wbfj6S/A94u7B9+Ppz+EfxP8O57+CP5N8O94+gPwB9p78H2U9wfgE+UdwJ9or8H3Ud4fwInyDvAn2kvwfZT3B+AT5U3An2ivwPdR3h+AT5Q3AX+ivQTfR3l/AD5R3gH8ivYSfB/l/QH4RHkH8Cfau8D7KO9S3F285yH4I8ZzHqG8X0Xv7rO5A7p/4H2UdwBv4H0X7Y3on6A/3b/bXWf8m6/ZfX6//S9n9/nd3//O+/yW+0n+RPlzBf/S9q8Yf4/xYf9pA4UfM1D4G5qB4q8qA8Xf5zJQ/KN0oPjnUAGKf8sUKP7f4H/Wv5G427/vBwpvBwovDwpvCwoXvXvIqf4wK5wNVDvU6A6zI9XOnnLqP80q5zIruOzd6jLpMqu8y6ywMqs8793KMpXpMqs874vKdOYyv+/dyr5Mn/eOZZm+7B3LMn3ZO9Zlmsm9W9mbN7mNf4f/AByZ6g5j68YIAAAAAElFTkSuQmCC">
+
+    <style>
+        :root {
+            --bg-principal: #FDFBF7; /* Fondo Avena Suave */
+            --bg-tarjeta: #FFFFFF;
+            --texto-principal: #4A3E3D;
+            --texto-secundario: #8A7A78;
+            --primario-rosa: #F3C1B6; /* Rosa empolvado */
+            --primario-rosa-hover: #E8AFA3;
+            --acento-menta: #D2EBD9; /* Verde menta */
+            --texto-menta: #2E6540;
+            --acento-lavanda: #E6E1F3;
+            --borde: #EFEBE4;
+        }
+
+        [data-theme="dark"] {
+            --bg-principal: #1E1A1A;
+            --bg-tarjeta: #2A2423;
+            --texto-principal: #F5EFEB;
+            --texto-secundario: #C5B9B7;
+            --primario-rosa: #D99687;
+            --primario-rosa-hover: #C58374;
+            --acento-menta: #24422B;
+            --texto-menta: #A3E2B5;
+            --acento-lavanda: #373147;
+            --borde: #3A3231;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        body {
+            background-color: #ECE7E1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .phone-container {
+            width: 100%;
+            max-width: 440px;
+            height: 94vh;
+            background-color: var(--bg-principal);
+            border-radius: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            overflow: hidden;
+            position: relative;
+        }
+
+        header {
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--borde);
+            background-color: var(--bg-tarjeta);
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+        }
+
+        .logo-text {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--texto-principal);
+            letter-spacing: -0.4px;
+            line-height: 1.1;
+        }
+
+        .logo-text span {
+            color: var(--primario-rosa-hover);
+        }
+
+        .tagline {
+            font-size: 0.75rem;
+            color: var(--texto-secundario);
+            font-weight: 500;
+        }
+
+        main {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 85px;
+        }
+
+        .card {
+            background-color: var(--bg-tarjeta);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 15px;
+            border: 1px solid var(--borde);
+        }
+
+        .section-title {
+            font-size: 1.05rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+            color: var(--texto-principal);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.82rem;
+            margin-bottom: 5px;
+            color: var(--texto-secundario);
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--borde);
+            background-color: var(--bg-principal);
+            color: var(--texto-principal);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .flex-inputs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-main {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primario-rosa);
+            color: #4A3E3D;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--bg-principal);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+            color: var(--texto-principal);
+            border-left: 4px solid var(--primario-rosa);
+        }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: #C66;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--texto-principal);
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--primario-rosa-hover);
+        }
+
+        .range-value {
+            min-width: 50px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        .result-box {
+            background-color: var(--acento-menta);
+            color: var(--texto-menta);
+            border-radius: 14px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .result-box .price {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 5px;
+        }
+
+        .desglose-texto {
+            font-size: 0.8rem;
+            color: var(--texto-secundario);
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 70px;
+            background-color: var(--bg-tarjeta);
+            border-top: 1px solid var(--borde);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: none;
+            border: none;
+            color: var(--texto-secundario);
+            font-size: 0.72rem;
+            cursor: pointer;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        .nav-item.active {
+            color: var(--primario-rosa-hover);
+            font-weight: 700;
+        }
+
+        .nav-item span {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .modal {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-tarjeta);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 360px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="phone-container">
+    <header>
+        <div class="header-left">
+            <div class="logo-text">Aral<span>Costos</span></div>
+            <div class="tagline">Tu Taller de Precisión</div>
+        </div>
+        <button style="background:none; border:none; font-size:1.1rem; cursor:pointer;" onclick="toggleTheme()">🌙</button>
+    </header>
+
+    <main id="tab-costear">
+        <div class="card" style="padding: 10px 15px; display:flex; justify-content:space-between; align-items:center;">
+            <label style="margin:0;">Moneda Actual:</label>
+            <select id="currency" onchange="calcularPrecio()" style="width:auto; padding:4px 8px;">
+    <option value="S/." data-symbol="S/.">PEN (S/.) - Sol Peruano</option>
+    <option value="$" data-symbol="$">MXN ($) - Peso Mexicano</option>
+    <option value="$" data-symbol="$">COP ($) - Peso Colombiano</option>
+    <option value="$" data-symbol="$">ARS ($) - Peso Argentino</option>
+    <option value="$" data-symbol="$">CLP ($) - Peso Chileno</option>
+    <option value="Bs" data-symbol="Bs">BOB (Bs) - Boliviano</option>
+    <option value="₡" data-symbol="₡">CRC (₡) - Colón Costarricense</option>
+    <option value="$" data-symbol="$">USD ($) - Dólar Estadounidense</option>
+    <option value="€" data-symbol="€">EUR (€) - Euro (España)</option>
+</select>
+        </div>
+
+        <div class="card">
+            <div class="section-title">🌸 Materiales Seleccionados</div>
+            <button class="btn-main" style="background-color:var(--acento-lavanda); margin-bottom:12px;" onclick="abrirModalCatalogo()">
+                📥 Traer de mi Despensa Aral
+            </button>
+            <div id="listaMaterialesProducto"></div>
+        </div>
+
+        <div class="card">
+            <div class="section-title">⏳ Tiempo y Margen</div>
+            <div class="input-group">
+                <label for="horas">Horas dedicadas a este proyecto</label>
+                <div class="slider-container">
+                    <input type="range" id="horas" min="0.5" max="12" step="0.5" value="2" oninput="updateHorasLabel(this.value)">
+                    <span class="range-value" id="horasLabel">2 hrs</span>
+                </div>
+            </div>
+            <div class="input-group">
+                <label for="valorHora">Tu pago por hora de trabajo</label>
+                <input type="number" id="valorHora" value="12">
+            </div>
+            <div class="input-group">
+                <label for="margen">Margen de Ganancia Neto (%)</label>
+                <div class="slider-container">
+                    <input type="range" id="margen" min="10" max="150" step="5" value="50" oninput="updateMargenLabel(this.value)">
+                    <span class="range-value" id="margenLabel">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="border-color: var(--primario-rosa);">
+            <div class="section-title">💎 Precio Sugerido Aral</div>
+            <div class="result-box">
+                <div class="price" id="precioFinal">S/. 0.00</div>
+            </div>
+            <div class="desglose-texto" id="desgloseCostos"></div>
+        </div>
+    </main>
+
+    <main id="tab-despensa" style="display: none;">
+        <div class="card">
+            <div class="section-title">📦 Mi Despensa de Insumos</div>
+            <div class="input-group">
+                <label>Nombre del Insumo</label>
+                <input type="text" id="despensaNombre" placeholder="Ej: Cartón Gris, Vinil, Hojas">
+            </div>
+            <div class="flex-inputs">
+                <div style="flex:1;"><label>Costo Paquete</label><input type="number" id="despensaCostoPaquete" step="0.1"></div>
+                <div style="flex:1;"><label>Unidades</label><input type="number" id="despensaCantidadPaquete"></div>
+            </div>
+            <button class="btn-main" style="margin-top:12px;" onclick="guardarEnDespensaGlobal()">💾 Guardar en Almacén</button>
+        </div>
+        <div class="card">
+            <div class="section-title">Banco de Materiales Registrados</div>
+            <div id="listaDespensaGlobal"></div>
+        </div>
+    </main>
+
+    <main id="tab-gastos" style="display: none;">
+        <div class="card">
+            <div class="section-title">🏢 Costos Operativos Mensuales</div>
+            <div class="input-group"><label>Empaque por unidad</label><input type="number" id="gastoEmpaque" value="2.50" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Luz mensual</label><input type="number" id="gastoLuz" value="40.00" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Agua mensual</label><input type="number" id="gastoAgua" value="15.00" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Alquiler / Espacio</label><input type="number" id="gastoAlquiler" value="150.00" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Otros gastos variables</label><input type="number" id="gastoOtros" value="20.00" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Horas de taller trabajadas al mes</label><input type="number" id="horasMensualesTaller" value="80" oninput="recalcularGastosVariables()"></div>
+            <div class="result-box" style="background-color:var(--acento-lavanda); color:var(--texto-principal);">
+                <div style="font-size:0.85rem;">Costo operativo por hora:</div>
+                <div class="price" id="costoGastoPorHora" style="font-size:1.4rem;">S/. 2.81</div>
+            </div>
+        </div>
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-item active" id="btnNavCostear" onclick="cambiarPestana('costear')"><span>✨</span>Costear</button>
+        <button class="nav-item" id="btnNavDespensa" onclick="cambiarPestana('despensa')"><span>📦</span>Despensa</button>
+        <button class="nav-item" id="btnNavGastos" onclick="cambiarPestana('gastos')"><span>🏢</span>Taller</button>
+    </nav>
+
+    <div class="modal" id="modalCantidadInsumo">
+        <div class="modal-content" style="padding:20px;">
+            <div class="section-title">📐 Cantidad a usar</div>
+            <div id="modalInsumoTexto"></div>
+            <div class="input-group" style="margin-top:10px;"><label>Unidades para este proyecto:</label><input type="number" id="cantidadUnidadesUsadas" value="1"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn-main" style="background-color:var(--borde);" onclick="cerrarModalCatalogo()">Cancelar</button>
+                <button class="btn-main" onclick="confirmarAdicionInsumo()">Añadir</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let despensaGlobal = [
+        { nombre: "Cartón Gris 2mm", costoPaquete: 45.00, cantidadPaquete: 10, costoUnitario: 4.50 },
+        { font: "Anillos Doble Ring", costoPaquete: 50.00, cantidadPaquete: 25, costoUnitario: 2.00 }
+    ];
+    let materialesDelProductoActual = [];
+    let costoPorHoraOperativo = 0;
+
+    document.getElementById('valorHora').addEventListener('input', calcularPrecio);
+
+    function cambiarPestana(tab) {
+        document.getElementById('tab-costear').style.display = tab === 'costear' ? 'block' : 'none';
+        document.getElementById('tab-despensa').style.display = tab === 'despensa' ? 'block' : 'none';
+        document.getElementById('tab-gastos').style.display = tab === 'gastos' ? 'block' : 'none';
+        document.getElementById('btnNavCostear').classList.toggle('active', tab === 'costear');
+        document.getElementById('btnNavDespensa').classList.toggle('active', tab === 'despensa');
+        document.getElementById('btnNavGastos').classList.toggle('active', tab === 'gastos');
+        if(tab === 'despensa') renderizarDespensaGlobal();
+        if(tab === 'costear') calcularPrecio();
+    }
+
+    function guardarEnDespensaGlobal() {
+        const nombre = document.getElementById('despensaNombre').value;
+        const costo = parseFloat(document.getElementById('despensaCostoPaquete').value);
+        const cant = parseInt(document.getElementById('despensaCantidadPaquete').value);
+        if(!nombre || !costo || !cant) return alert("Completa los datos");
+        despensaGlobal.push({ nombre, costoPaquete: costo, cantidadPaquete: cant, costoUnitario: costo/cant });
+        renderizarDespensaGlobal();
+        document.getElementById('despensaNombre').value = "";
+        document.getElementById('despensaCostoPaquete').value = "";
+        document.getElementById('despensaCantidadPaquete').value = "";
+        alert("Insumo guardado");
+    }
+
+    function renderizarDespensaGlobal() {
+        const lista = document.getElementById('listaDespensaGlobal');
+        lista.innerHTML = despensaGlobal.map((item, i) => `
+            <div class="item-row despensa-item">
+                <div><b>${item.nombre}</b><br><small>Paquete: S/. ${item.costoPaquete.toFixed(2)} (${item.cantidadPaquete} und)</small></div>
+                <span><b>S/. ${item.costoUnitario.toFixed(2)} c/u</b><button class="btn-delete" onclick="eliminarDeDespensa(${i})">❌</button></span>
+            </div>
+        `).join('');
+    }
+
+    function eliminarDeDespensa(i) { despensaGlobal.splice(i, 1); renderizarDespensaGlobal(); }
+
+    function abrirModalCatalogo() {
+        const modal = document.getElementById('modalCantidadInsumo');
+        modal.style.display = "flex";
+        document.getElementById('modalInsumoTexto').innerHTML = `<select id='selectInsumoModal'>` +
+            despensaGlobal.map((item, i) => `<option value='${i}'>${item.nombre} (S/. ${item.costoUnitario.toFixed(2)})</option>`).join('') + `</select>`;
+    }
+
+    function confirmarAdicionInsumo() {
+        const i = document.getElementById('selectInsumoModal').value;
+        const cant = parseFloat(document.getElementById('cantidadUnidadesUsadas').value);
+        if(!cant || cant <= 0) return alert("Ingresa una cantidad válida");
+        const item = despensaGlobal[i];
+        materialesDelProductoActual.push({ nombre: item.nombre, cantidadUsada: cant, costoFinalCalculado: item.costoUnitario * cant });
+        cerrarModalCatalogo();
+        renderizarMaterialesProducto();
+        calcularPrecio();
+    }
+
+    function cerrarModalCatalogo() { document.getElementById('modalCantidadInsumo').style.display = "none"; }
+
+    function renderizarMaterialesProducto() {
+        document.getElementById('listaMaterialesProducto').innerHTML = materialesDelProductoActual.map((item, i) => `
+            <div class="item-row">
+                <div><span>🎨 ${item.nombre}</span><br><small>Cantidad: ${item.cantidadUsada} unds</small></div>
+                <span><b>S/. ${item.costoFinalCalculado.toFixed(2)}</b><button class="btn-delete" onclick="materialesDelProductoActual.splice(${i},1);renderizarMaterialesProducto();calcularPrecio();">❌</button></span>
+            </div>
+        `).join('') || "<i>Selecciona materiales de tu despensa para empezar.</i>";
+    }
+
+    function recalcularGastosVariables() {
+        const totalMensual = parseFloat(document.getElementById('gastoLuz').value) + parseFloat(document.getElementById('gastoAgua').value) + parseFloat(document.getElementById('gastoAlquiler').value) + parseFloat(document.getElementById('gastoOtros').value);
+        costoPorHoraOperativo = totalMensual / parseFloat(document.getElementById('horasMensualesTaller').value);
+        document.getElementById('costoGastoPorHora').innerText = "S/. " + costoPorHoraOperativo.toFixed(2);
+        calcularPrecio();
+    }
+
+    function updateHorasLabel(v) { document.getElementById('horasLabel').innerText = v + ' hrs'; calcularPrecio(); }
+    function updateMargenLabel(v) { document.getElementById('margenLabel').innerText = v + '%'; calcularPrecio(); }
+
+    function calcularPrecio() {
+        let mat = 0; materialesDelProductoActual.forEach(i => mat += i.costoFinalCalculado);
+        const hrs = parseFloat(document.getElementById('horas').value);
+        const vH = parseFloat(document.getElementById('valorHora').value) || 0;
+        const emp = parseFloat(document.getElementById('gastoEmpaque').value) || 0;
+        const marg = parseFloat(document.getElementById('margen').value);
+        const simbolo = document.getElementById('currency').options[document.getElementById('currency').selectedIndex].getAttribute('data-symbol');
+
+        const tallerProrrateado = costoPorHoraOperativo * hrs;
+        const manoObra = hrs * vH;
+        const costoTotal = mat + manoObra + tallerProrrateado + emp;
+        const pVenta = costoTotal * (1 + (marg / 100));
+
+        document.getElementById('precioFinal').innerText = simbolo + ' ' + pVenta.toFixed(2);
+        document.getElementById('desgloseCostos').innerHTML = `
+            • Materiales: ${simbolo} ${mat.toFixed(2)}<br>
+            • Mano de Obra: ${simbolo} ${manoObra.toFixed(2)}<br>
+            • Gastos Taller (${hrs}h): ${simbolo} ${tallerProrrateado.toFixed(2)}<br>
+            • Empaque fijo: ${simbolo} ${emp.toFixed(2)}
+        `;
+    }
+
+    function toggleTheme() {
+        const b = document.body; b.setAttribute('data-theme', b.getAttribute('data-theme') === 'dark' ? '' : 'dark');
+    }
+
+    recalcularGastosVariables();
+    renderizarMaterialesProducto();
+</script>
+</body>
+</html>
