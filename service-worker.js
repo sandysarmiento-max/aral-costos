@@ -1,9 +1,12 @@
-const CACHE_NAME = "aral-costos-v1";
+const CACHE_NAME = "aral-costos-v2";
 
 const FILES_TO_CACHE = [
   "./",
   "./index.html",
-  "./site.webmanifest"
+  "./site.webmanifest",
+  "./icon-192.png",
+  "./icon-512.png",
+  "./apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
