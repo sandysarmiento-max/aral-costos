@@ -1,0 +1,10 @@
+{
+  "name": "Aral Costos",
+  "short_name": "Aral Costos",
+  "description": "Calculadora de costos de Aral",
+  "start_url": "/aral-costos/",
+  "scope": "/aral-costos/",
+  "display": "standalone",
+  "background_color": "#F7F2ED",
+  "theme_color": "#EFC2B8"
+}
