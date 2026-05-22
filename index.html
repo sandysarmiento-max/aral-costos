@@ -12,6 +12,33 @@
 <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png?v=3">
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=3">
     <style>
+        .toast-aviso {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--texto-principal);
+  color: var(--bg-principal);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(91, 64, 55, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.toast-aviso.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-aviso.error {
+  background: #9f3f3f;
+  color: #fffaf4;
+}
         :root {
             --bg-principal: #FDFBF7; /* Fondo Avena Suave */
             --bg-tarjeta: #FFFFFF;
@@ -564,7 +591,7 @@
         enlace.click();
         enlace.remove();
         URL.revokeObjectURL(url);
-        alert("Respaldo descargado. Guárdalo en Drive, correo o WhatsApp para poder recuperarlo si cambias de celular.");
+        showToast("Respaldo descargado. Guárdalo en Drive, correo o WhatsApp para poder recuperarlo si cambias de celular.");
     }
 
     function seleccionarArchivoRespaldo() {
@@ -595,10 +622,10 @@
                 renderizarMaterialesProducto();
                 recalcularGastosVariables();
                 guardarDatosLocales();
-                alert("Respaldo importado correctamente.");
+                showToast("Respaldo importado correctamente.");
             } catch (error) {
                 restaurandoDatos = false;
-                alert("No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Aral Costos.");
+                showToast("No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Aral Costos.");
             }
         };
         lector.readAsText(archivo);
@@ -621,14 +648,14 @@
         const nombre = document.getElementById('despensaNombre').value.trim();
         const costo = parseFloat(document.getElementById('despensaCostoPaquete').value);
         const cant = parseFloat(document.getElementById('despensaCantidadPaquete').value);
-        if(!nombre || !Number.isFinite(costo) || costo <= 0 || !Number.isFinite(cant) || cant <= 0) return alert("Completa los datos con valores válidos");
+        if(!nombre || !Number.isFinite(costo) || costo <= 0 || !Number.isFinite(cant) || cant <= 0) return showToast("Completa los datos con valores válidos");
         despensaGlobal.push({ nombre, costoPaquete: costo, cantidadPaquete: cant, costoUnitario: costo/cant });
         guardarDatosLocales();
         renderizarDespensaGlobal();
         document.getElementById('despensaNombre').value = "";
         document.getElementById('despensaCostoPaquete').value = "";
         document.getElementById('despensaCantidadPaquete').value = "";
-        alert("Insumo guardado");
+        showToast("Insumo guardado");
     }
 
     function renderizarDespensaGlobal() {
@@ -648,7 +675,7 @@
     }
 
     function abrirModalCatalogo() {
-        if (!despensaGlobal.length) return alert("Primero guarda materiales en tu despensa.");
+        if (!despensaGlobal.length) return showToast("Primero guarda materiales en tu despensa.");
         const modal = document.getElementById('modalCantidadInsumo');
         modal.style.display = "flex";
         document.getElementById('modalInsumoTexto').innerHTML = `<select id='selectInsumoModal'>` +
@@ -658,7 +685,7 @@
     function confirmarAdicionInsumo() {
         const i = document.getElementById('selectInsumoModal').value;
         const cant = parseFloat(document.getElementById('cantidadUnidadesUsadas').value);
-        if(!cant || cant <= 0) return alert("Ingresa una cantidad válida");
+        if(!cant || cant <= 0) return showToast("Ingresa una cantidad válida");
         const item = despensaGlobal[i];
         materialesDelProductoActual.push({ nombre: item.nombre, cantidadUsada: cant, costoFinalCalculado: item.costoUnitario * cant });
         cerrarModalCatalogo();
@@ -736,6 +763,28 @@
     renderizarDespensaGlobal();
     renderizarMaterialesProducto();
     guardarDatosLocales();
+    function showToast(mensaje, tipo = "ok") {
+  let toast = document.getElementById("toastAviso");
+
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toastAviso";
+    toast.className = "toast-aviso";
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = mensaje;
+  toast.className = "toast-aviso visible";
+
+  if (tipo === "error") {
+    toast.classList.add("error");
+  }
+
+  clearTimeout(window.toastTimer);
+  window.toastTimer = setTimeout(() => {
+    toast.classList.remove("visible");
+  }, 2500);
+}
 </script>
     <script>
   if ("serviceWorker" in navigator) {
