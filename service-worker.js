@@ -1,4 +1,4 @@
-const CACHE_NAME = "aral-costos-v4";
+const CACHE_NAME = "aral-costos-v5";
 
 const FILES_TO_CACHE = [
   "./",
