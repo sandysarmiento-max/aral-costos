@@ -62,7 +62,6 @@
     return [{ value: 'otro', label: textoUnidad(compra) }];
   }
 
-  // Lista simplificada para registrar insumos nuevos.
   opcionesUnidad = function opcionesUnidadV2(seleccionada) {
     const actual = String(seleccionada || 'unidad');
     return opciones(UNIDADES_V2, actual.startsWith('otro:') ? 'otro' : actual);
@@ -114,7 +113,6 @@
   prepararUnidadUsada = function prepararUnidadUsadaV2() {
     const selectorInsumo = document.getElementById('selectInsumoModal');
     if (!selectorInsumo) return;
-
     const item = despensaGlobal[Number(selectorInsumo.value)];
     if (!item) return;
 
@@ -148,7 +146,6 @@
   confirmarAdicionInsumo = function confirmarAdicionInsumoV2() {
     const selector = document.getElementById('selectInsumoModal');
     if (!selector) return;
-
     const item = despensaGlobal[Number(selector.value)];
     if (!item) return;
 
@@ -157,7 +154,6 @@
     const inputOtro = document.getElementById('unidadUsadaOtra');
     let unidad = selectUnidad?.value || item.unidadCompra || 'unidad';
     if (unidad === 'otro') unidad = `otro:${(inputOtro?.value || '').trim()}`;
-
     if (cant <= 0) return showToast('Ingresa una cantidad válida');
 
     let cantidadEnCompra = null;
@@ -184,7 +180,6 @@
     calcularPrecio();
   };
 
-  // Muestra el costo unitario de forma más comprensible.
   renderizarDespensaGlobal = function renderizarDespensaGlobalV2() {
     const contenedor = document.getElementById('listaDespensaGlobal');
     if (!contenedor) return;
@@ -203,7 +198,22 @@
     `).join('') || '<i>Aún no tienes insumos guardados.</i>';
   };
 
-  // Corrige el cálculo antiguo que todavía buscaba gastoEmpaque.
+  renderizarEmpaques = function renderizarEmpaquesV2() {
+    const contenedor = document.getElementById('listaEmpaques');
+    if (!contenedor) return;
+    const sym = simboloMoneda();
+    contenedor.innerHTML = empaquesProducto.map((x, i) => `
+      <div class="dynamic-row">
+        <input aria-label="Nombre del empaque" placeholder="Ej: Caja" value="${escapar(x.nombre)}" oninput="actualizarFila(empaquesProducto,${i},'nombre',this.value)">
+        <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
+          <span style="font-weight:600;color:var(--texto-secundario);white-space:nowrap;">${sym}</span>
+          <input aria-label="Costo del empaque" type="number" min="0" step="any" placeholder="Costo" value="${x.monto || ''}" oninput="actualizarFila(empaquesProducto,${i},'monto',this.value)">
+        </div>
+        <button class="btn-delete" onclick="eliminarFila(empaquesProducto,${i})">❌</button>
+      </div>
+    `).join('') || '<i>Aún no agregas empaques.</i>';
+  };
+
   calcularPrecio = function calcularPrecioV2() {
     const mat = materialesDelProductoActual.reduce((suma, item) => suma + (Number(item.costoFinalCalculado) || 0), 0);
     const hrs = numeroSeguro(document.getElementById('horas')?.value, 0);
@@ -229,6 +239,15 @@
 
   const selectorUnidadCompra = document.getElementById('despensaUnidadCompra');
   if (selectorUnidadCompra) selectorUnidadCompra.innerHTML = opcionesUnidad('unidad');
+
+  const selectorMoneda = document.getElementById('currency');
+  if (selectorMoneda) {
+    selectorMoneda.addEventListener('change', () => {
+      renderizarDespensaGlobal();
+      renderizarEmpaques();
+      recalcularGastosVariables();
+    });
+  }
 
   renderizarDespensaGlobal();
   renderizarMaterialesProducto();
