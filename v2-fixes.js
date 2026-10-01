@@ -15,13 +15,13 @@
   ];
 
   const PERFILES_GOTAS = [
-    { value: '20', label: 'Referencia general — 20 gotas/ml' },
-    { value: '22.5', label: 'Líquido acuoso / tónico — 22.5 gotas/ml' },
+    { value: '22.5', label: 'Tipo agua / muy líquido — 22.5 gotas/ml' },
     { value: '16.5', label: 'Sérum medio — 16.5 gotas/ml' },
     { value: '15', label: 'Aceite ligero — 15 gotas/ml' },
-    { value: '13', label: 'Aceite más espeso — 13 gotas/ml' },
-    { value: '12', label: 'Mezcla muy viscosa — 12 gotas/ml' },
-    { value: '27.5', label: 'Solución alcohólica — 27.5 gotas/ml' }
+    { value: '13', label: 'Aceite espeso — 13 gotas/ml' },
+    { value: '12', label: 'Muy espeso — 12 gotas/ml' },
+    { value: '27.5', label: 'Solución alcohólica — 27.5 gotas/ml' },
+    { value: '20', label: 'Referencia general — 20 gotas/ml' }
   ];
 
   function escapar(valor) {
@@ -85,14 +85,15 @@
     panel.style.borderRadius = '10px';
     panel.style.background = 'var(--bg-principal)';
     panel.innerHTML = `
-      <label style="margin-bottom:6px;">Conversión aproximada de gotas</label>
+      <label style="margin-bottom:6px;font-weight:600;">Conversión aproximada de gotas</label>
+      <label style="margin-bottom:6px;">¿Qué tan espeso es el líquido?</label>
       <select id="tipoLiquidoGotas" style="margin-bottom:8px;">
         ${PERFILES_GOTAS.map(p => `<option value="${p.value}">${p.label}</option>`).join('')}
       </select>
       <label style="margin-bottom:6px;">Gotas por ml</label>
-      <input id="gotasPorMl" type="number" min="1" step="0.1" value="20">
+      <input id="gotasPorMl" type="number" min="1" step="0.1" value="22.5">
       <small style="display:block;margin-top:6px;color:var(--texto-secundario);line-height:1.35;">
-        Valor aproximado. Puede variar según la viscosidad del líquido y el gotero. Puedes editarlo si conoces el rendimiento de tu producto.
+        Valor aproximado. Puede variar según el espesor del líquido y el gotero. Si conoces el rendimiento de tu producto, puedes editarlo.
       </small>
     `;
     grupo.appendChild(panel);
