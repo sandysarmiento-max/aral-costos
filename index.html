@@ -330,6 +330,11 @@
             width: 100%;
             max-width: 360px;
         }
+        .dynamic-row { display:flex; gap:8px; align-items:center; margin:8px 0; }
+        .dynamic-row input { min-width:0; }
+        .dynamic-row .btn-delete { flex:0 0 auto; }
+        .unit-fields { display:flex; gap:8px; margin-top:8px; }
+        .unit-fields > * { flex:1; min-width:0; }
     </style>
 </head>
 <body>
@@ -389,6 +394,13 @@
             </div>
         </div>
 
+        <div class="card">
+            <div class="section-title">📦 Empaque del producto</div>
+            <div class="backup-note">Agrega cada empaque utilizado; sus montos se suman al costo del producto.</div>
+            <div id="listaEmpaques"></div>
+            <button type="button" class="btn-main btn-secondary" onclick="agregarEmpaque()">+ Agregar empaque</button>
+        </div>
+
         <div class="card" style="border-color: var(--primario-rosa);">
             <div class="section-title">💎 Precio Sugerido Aral</div>
             <div class="result-box">
@@ -406,9 +418,11 @@
                 <input type="text" id="despensaNombre" placeholder="Ej: Cartón Gris, Vinil, Hojas">
             </div>
             <div class="flex-inputs">
-                <div style="flex:1;"><label>Costo Paquete</label><input type="number" id="despensaCostoPaquete" step="0.1"></div>
-                <div style="flex:1;"><label>Unidades</label><input type="number" id="despensaCantidadPaquete"></div>
+                <div style="flex:1;"><label>Cantidad comprada</label><input type="number" id="despensaCantidadPaquete" min="0" step="any"></div>
+                <div style="flex:1;"><label>Unidad de compra</label><select id="despensaUnidadCompra" onchange="actualizarUnidadPersonalizada('despensaUnidadCompra','despensaUnidadOtra')"></select></div>
             </div>
+            <div class="input-group" id="despensaUnidadOtraWrap" style="display:none"><label>Especifica la unidad</label><input id="despensaUnidadOtra" type="text" placeholder="Ej: docena"></div>
+            <div class="input-group"><label>Costo total de compra</label><input type="number" id="despensaCostoPaquete" min="0" step="any"></div>
             <button class="btn-main" style="margin-top:12px;" onclick="guardarEnDespensaGlobal()">💾 Guardar en Almacén</button>
         </div>
         <div class="card">
@@ -420,11 +434,7 @@
     <main id="tab-gastos" style="display: none;">
         <div class="card">
             <div class="section-title">🏢 Costos Operativos Mensuales</div>
-            <div class="input-group"><label>Empaque por unidad</label><input type="number" id="gastoEmpaque" value="2.50" oninput="recalcularGastosVariables()"></div>
-            <div class="input-group"><label>Luz mensual</label><input type="number" id="gastoLuz" value="40.00" oninput="recalcularGastosVariables()"></div>
-            <div class="input-group"><label>Agua mensual</label><input type="number" id="gastoAgua" value="15.00" oninput="recalcularGastosVariables()"></div>
-            <div class="input-group"><label>Alquiler / Espacio</label><input type="number" id="gastoAlquiler" value="150.00" oninput="recalcularGastosVariables()"></div>
-            <div class="input-group"><label>Otros gastos variables</label><input type="number" id="gastoOtros" value="20.00" oninput="recalcularGastosVariables()"></div>
+            <div class="input-group"><label>Gastos mensuales</label><div id="listaGastosMensuales"></div><button type="button" class="btn-main btn-secondary" onclick="agregarGastoMensual()">+ Agregar gasto</button></div>
             <div class="input-group"><label>Horas de taller trabajadas al mes</label><input type="number" id="horasMensualesTaller" value="80" oninput="recalcularGastosVariables()"></div>
             <div class="result-box" style="background-color:var(--acento-lavanda); color:var(--texto-principal);">
                 <div style="font-size:0.85rem;">Costo operativo por hora:</div>
@@ -453,7 +463,8 @@
         <div class="modal-content" style="padding:20px;">
             <div class="section-title">📐 Cantidad a usar</div>
             <div id="modalInsumoTexto"></div>
-            <div class="input-group" style="margin-top:10px;"><label>Unidades para este proyecto:</label><input type="number" id="cantidadUnidadesUsadas" value="1"></div>
+            <div class="input-group" style="margin-top:10px;"><label>Cantidad usada:</label><input type="number" id="cantidadUnidadesUsadas" value="1" min="0" step="any"></div>
+            <div class="input-group"><label>Unidad usada</label><select id="unidadUsada"></select><input id="unidadUsadaOtra" type="text" placeholder="Especifica la unidad" style="display:none;margin-top:8px"></div>
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button class="btn-main" style="background-color:var(--borde);" onclick="cerrarModalCatalogo()">Cancelar</button>
                 <button class="btn-main" onclick="confirmarAdicionInsumo()">Añadir</button>
@@ -464,260 +475,78 @@
 
 <script>
     const STORAGE_KEY = "aralCostosDataV1";
+    const UNIDADES = ["unidad", "kg", "g", "litro", "ml", "metro", "cm", "paquete", "caja", "rollo", "ovillo", "otro"];
+    const ETIQUETAS_UNIDAD = { unidad:"unidad", kg:"kg", g:"g", litro:"litro", ml:"ml", metro:"metro", cm:"cm", paquete:"paquete", caja:"caja", rollo:"rollo", ovillo:"ovillo", otro:"otro" };
     const DEFAULT_DESPENSA = [
-        { nombre: "Cartón Gris 2mm", costoPaquete: 45.00, cantidadPaquete: 10, costoUnitario: 4.50 },
-        { nombre: "Anillos Doble Ring", costoPaquete: 50.00, cantidadPaquete: 25, costoUnitario: 2.00 }
+        { nombre:"Cartón Gris 2mm", costoPaquete:45, cantidadPaquete:10, unidadCompra:"unidad", costoUnitario:4.5 },
+        { nombre:"Anillos Doble Ring", costoPaquete:50, cantidadPaquete:25, unidadCompra:"unidad", costoUnitario:2 }
     ];
-
-    let despensaGlobal = [...DEFAULT_DESPENSA];
-    let materialesDelProductoActual = [];
-    let costoPorHoraOperativo = 0;
-    let restaurandoDatos = false;
-
-    function numeroSeguro(valor, respaldo = 0) {
-        const numero = parseFloat(valor);
-        return Number.isFinite(numero) ? numero : respaldo;
-    }
-
-    function valorInput(id, respaldo = "") {
-        const campo = document.getElementById(id);
-        return campo ? campo.value : respaldo;
-    }
-
+    let despensaGlobal = [...DEFAULT_DESPENSA], materialesDelProductoActual = [], empaquesProducto = [], gastosMensuales = [];
+    let costoPorHoraOperativo = 0, restaurandoDatos = false;
+    const gastoMensualInicial = [{nombre:"Luz",monto:40},{nombre:"Agua",monto:15},{nombre:"Alquiler / Espacio",monto:150},{nombre:"Otros gastos",monto:20}];
+    function numeroSeguro(valor, respaldo=0) { const n=parseFloat(valor); return Number.isFinite(n)?n:respaldo; }
+    function valorInput(id, respaldo="") { return document.getElementById(id)?.value ?? respaldo; }
+    function escaparHtml(valor) { return String(valor ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+    function unidadNormalizada(u) { return String(u || "unidad"); }
     function normalizarDespensa(items) {
-        if (!Array.isArray(items)) return [];
-        return items.map((item) => {
-            const costoPaquete = numeroSeguro(item.costoPaquete, 0);
-            const cantidadPaquete = numeroSeguro(item.cantidadPaquete, 0);
-            const costoUnitario = numeroSeguro(item.costoUnitario, cantidadPaquete > 0 ? costoPaquete / cantidadPaquete : 0);
-            return {
-                nombre: String(item.nombre || item.font || "").trim(),
-                costoPaquete,
-                cantidadPaquete,
-                costoUnitario
-            };
-        }).filter((item) => item.nombre && item.costoPaquete > 0 && item.cantidadPaquete > 0);
+        if(!Array.isArray(items)) return [];
+        return items.map(item=>{
+            const costoPaquete=numeroSeguro(item.costoPaquete ?? item.costoCompra,0), cantidadPaquete=numeroSeguro(item.cantidadPaquete ?? item.cantidadCompra,0);
+            const unidadCompra=unidadNormalizada(item.unidadCompra || item.unidad || "unidad");
+            return {nombre:String(item.nombre||item.font||"").trim(),costoPaquete,cantidadPaquete,unidadCompra,costoUnitario:numeroSeguro(item.costoUnitario,cantidadPaquete>0?costoPaquete/cantidadPaquete:0)};
+        }).filter(i=>i.nombre&&i.costoPaquete>0&&i.cantidadPaquete>0);
     }
-
     function normalizarMateriales(items) {
-        if (!Array.isArray(items)) return [];
-        return items.map((item) => ({
-            nombre: String(item.nombre || "").trim(),
-            cantidadUsada: numeroSeguro(item.cantidadUsada, 0),
-            costoFinalCalculado: numeroSeguro(item.costoFinalCalculado, 0)
-        })).filter((item) => item.nombre && item.cantidadUsada > 0 && item.costoFinalCalculado >= 0);
+        if(!Array.isArray(items)) return [];
+        return items.map(item=>({nombre:String(item.nombre||"").trim(),cantidadUsada:numeroSeguro(item.cantidadUsada,0),unidadUsada:unidadNormalizada(item.unidadUsada||"unidad"),costoFinalCalculado:numeroSeguro(item.costoFinalCalculado,0)})).filter(i=>i.nombre&&i.cantidadUsada>0&&i.costoFinalCalculado>=0);
     }
-
-    function obtenerFormularioActual() {
-        return {
-            currencyIndex: document.getElementById('currency')?.selectedIndex || 0,
-            horas: valorInput('horas', '2'),
-            valorHora: valorInput('valorHora', '12'),
-            margen: valorInput('margen', '50'),
-            gastoEmpaque: valorInput('gastoEmpaque', '2.50'),
-            gastoLuz: valorInput('gastoLuz', '40.00'),
-            gastoAgua: valorInput('gastoAgua', '15.00'),
-            gastoAlquiler: valorInput('gastoAlquiler', '150.00'),
-            gastoOtros: valorInput('gastoOtros', '20.00'),
-            horasMensualesTaller: valorInput('horasMensualesTaller', '80')
-        };
+    function normalizarFilas(items, defaults=[]) { return Array.isArray(items)?items.map(x=>({nombre:String(x.nombre||"").trim(),monto:numeroSeguro(x.monto ?? x.valor,0)})).filter(x=>x.nombre||x.monto>0):defaults.map(x=>({...x})); }
+    function formulariosV1(datos) { const f=datos.formulario||{}; return {
+        empaquesProducto:Array.isArray(datos.empaquesProducto)?normalizarFilas(datos.empaquesProducto):([{nombre:"Empaque",monto:numeroSeguro(f.gastoEmpaque,2.5)}].filter(x=>x.monto>0)),
+        gastosMensuales:Array.isArray(datos.gastosMensuales)?normalizarFilas(datos.gastosMensuales):[
+            {nombre:"Luz",monto:numeroSeguro(f.gastoLuz,40)}, {nombre:"Agua",monto:numeroSeguro(f.gastoAgua,15)}, {nombre:"Alquiler / Espacio",monto:numeroSeguro(f.gastoAlquiler,150)}, {nombre:"Otros gastos",monto:numeroSeguro(f.gastoOtros,20)}
+        ], formulario:f
+    }; }
+    function obtenerFormularioActual() { return {currencyIndex:document.getElementById('currency')?.selectedIndex||0,horas:valorInput('horas','2'),valorHora:valorInput('valorHora','12'),margen:valorInput('margen','50'),horasMensualesTaller:valorInput('horasMensualesTaller','80')}; }
+    function aplicarFormulario(datos={}) {
+        ['horas','valorHora','margen','horasMensualesTaller'].forEach(id=>{if(datos[id]!==undefined) document.getElementById(id).value=datos[id];});
+        if(datos.currencyIndex!==undefined) document.getElementById('currency').selectedIndex=Math.min(Math.max(parseInt(datos.currencyIndex,10)||0,0),document.getElementById('currency').options.length-1);
+        updateHorasLabel(valorInput('horas','2'),false); updateMargenLabel(valorInput('margen','50'),false);
     }
-
-    function aplicarFormulario(datos = {}) {
-        const campos = ['horas', 'valorHora', 'margen', 'gastoEmpaque', 'gastoLuz', 'gastoAgua', 'gastoAlquiler', 'gastoOtros', 'horasMensualesTaller'];
-        campos.forEach((id) => {
-            if (datos[id] !== undefined && document.getElementById(id)) {
-                document.getElementById(id).value = datos[id];
-            }
-        });
-        if (datos.currencyIndex !== undefined && document.getElementById('currency')) {
-            const selector = document.getElementById('currency');
-            selector.selectedIndex = Math.min(Math.max(parseInt(datos.currencyIndex, 10) || 0, 0), selector.options.length - 1);
-        }
-        updateHorasLabel(valorInput('horas', '2'), false);
-        updateMargenLabel(valorInput('margen', '50'), false);
+    function obtenerDatosRespaldo() { return {app:"Aral Costos",backupVersion:2,exportedAt:new Date().toISOString(),despensaGlobal:normalizarDespensa(despensaGlobal),materialesDelProductoActual:normalizarMateriales(materialesDelProductoActual),empaquesProducto:normalizarFilas(empaquesProducto),gastosMensuales:normalizarFilas(gastosMensuales),formulario:obtenerFormularioActual(),tema:document.body.getAttribute('data-theme')||""}; }
+    function guardarDatosLocales() { if(restaurandoDatos)return; try{localStorage.setItem(STORAGE_KEY,JSON.stringify(obtenerDatosRespaldo()));}catch(e){console.log("No se pudo guardar el respaldo local:",e);} }
+    function aplicarDatosRespaldo(datos) {
+        const migrados=formulariosV1(datos); despensaGlobal=normalizarDespensa(datos.despensaGlobal); materialesDelProductoActual=normalizarMateriales(datos.materialesDelProductoActual);
+        empaquesProducto=migrados.empaquesProducto; gastosMensuales=migrados.gastosMensuales; aplicarFormulario(migrados.formulario);
+        document.body.setAttribute('data-theme',datos.tema==='dark'?'dark':''); if(!despensaGlobal.length) despensaGlobal=[...DEFAULT_DESPENSA];
     }
-
-    function obtenerDatosRespaldo() {
-        return {
-            app: "Aral Costos",
-            backupVersion: 1,
-            exportedAt: new Date().toISOString(),
-            despensaGlobal: normalizarDespensa(despensaGlobal),
-            materialesDelProductoActual: normalizarMateriales(materialesDelProductoActual),
-            formulario: obtenerFormularioActual(),
-            tema: document.body.getAttribute('data-theme') || ""
-        };
-    }
-
-    function guardarDatosLocales() {
-        if (restaurandoDatos) return;
-        try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(obtenerDatosRespaldo()));
-        } catch (error) {
-            console.log("No se pudo guardar el respaldo local:", error);
-        }
-    }
-
-    function cargarDatosLocales() {
-        try {
-            const crudo = localStorage.getItem(STORAGE_KEY);
-            if (!crudo) return;
-            const datos = JSON.parse(crudo);
-            if (!datos || !Array.isArray(datos.despensaGlobal)) return;
-            restaurandoDatos = true;
-            despensaGlobal = normalizarDespensa(datos.despensaGlobal);
-            materialesDelProductoActual = normalizarMateriales(datos.materialesDelProductoActual);
-            aplicarFormulario(datos.formulario || {});
-            if (datos.tema === 'dark') document.body.setAttribute('data-theme', 'dark');
-            if (!despensaGlobal.length) despensaGlobal = [...DEFAULT_DESPENSA];
-        } catch (error) {
-            console.log("No se pudo cargar el respaldo local:", error);
-        } finally {
-            restaurandoDatos = false;
-        }
-    }
-
-    function exportarRespaldo() {
-        guardarDatosLocales();
-        const datos = obtenerDatosRespaldo();
-        const fecha = new Date().toISOString().slice(0, 10);
-        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const enlace = document.createElement('a');
-        enlace.href = url;
-        enlace.download = `aral-costos-respaldo-${fecha}.json`;
-        document.body.appendChild(enlace);
-        enlace.click();
-        enlace.remove();
-        URL.revokeObjectURL(url);
-        showToast("Respaldo descargado. Guárdalo en Drive, correo o WhatsApp para poder recuperarlo si cambias de celular.");
-    }
-
-    function seleccionarArchivoRespaldo() {
-        const input = document.getElementById('archivoRespaldo');
-        input.value = "";
-        input.click();
-    }
-
-    function importarRespaldo(event) {
-        const archivo = event.target.files && event.target.files[0];
-        if (!archivo) return;
-        const lector = new FileReader();
-        lector.onload = () => {
-            try {
-                const datos = JSON.parse(lector.result);
-                const esValido = datos && (datos.app === "Aral Costos" || Array.isArray(datos.despensaGlobal));
-                if (!esValido) throw new Error("Archivo no compatible");
-                const confirmar = confirm("Importar este respaldo reemplazará los datos actuales de esta app. ¿Deseas continuar?");
-                if (!confirmar) return;
-                restaurandoDatos = true;
-                despensaGlobal = normalizarDespensa(datos.despensaGlobal);
-                materialesDelProductoActual = normalizarMateriales(datos.materialesDelProductoActual);
-                aplicarFormulario(datos.formulario || {});
-                document.body.setAttribute('data-theme', datos.tema === 'dark' ? 'dark' : '');
-                if (!despensaGlobal.length) despensaGlobal = [...DEFAULT_DESPENSA];
-                restaurandoDatos = false;
-                renderizarDespensaGlobal();
-                renderizarMaterialesProducto();
-                recalcularGastosVariables();
-                guardarDatosLocales();
-                showToast("Respaldo importado correctamente.");
-            } catch (error) {
-                restaurandoDatos = false;
-                showToast("No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Aral Costos.");
-            }
-        };
-        lector.readAsText(archivo);
-    }
-
-    document.getElementById('valorHora').addEventListener('input', calcularPrecio);
-
-    function cambiarPestana(tab) {
-        document.getElementById('tab-costear').style.display = tab === 'costear' ? 'block' : 'none';
-        document.getElementById('tab-despensa').style.display = tab === 'despensa' ? 'block' : 'none';
-        document.getElementById('tab-gastos').style.display = tab === 'gastos' ? 'block' : 'none';
-        document.getElementById('btnNavCostear').classList.toggle('active', tab === 'costear');
-        document.getElementById('btnNavDespensa').classList.toggle('active', tab === 'despensa');
-        document.getElementById('btnNavGastos').classList.toggle('active', tab === 'gastos');
-        if(tab === 'despensa') renderizarDespensaGlobal();
-        if(tab === 'costear') calcularPrecio();
-    }
-
-    function guardarEnDespensaGlobal() {
-        const nombre = document.getElementById('despensaNombre').value.trim();
-        const costo = parseFloat(document.getElementById('despensaCostoPaquete').value);
-        const cant = parseFloat(document.getElementById('despensaCantidadPaquete').value);
-        if(!nombre || !Number.isFinite(costo) || costo <= 0 || !Number.isFinite(cant) || cant <= 0) return showToast("Completa los datos con valores válidos");
-        despensaGlobal.push({ nombre, costoPaquete: costo, cantidadPaquete: cant, costoUnitario: costo/cant });
-        guardarDatosLocales();
-        renderizarDespensaGlobal();
-        document.getElementById('despensaNombre').value = "";
-        document.getElementById('despensaCostoPaquete').value = "";
-        document.getElementById('despensaCantidadPaquete').value = "";
-        showToast("Insumo guardado");
-    }
-
-    function renderizarDespensaGlobal() {
-        const lista = document.getElementById('listaDespensaGlobal');
-        lista.innerHTML = despensaGlobal.map((item, i) => `
-            <div class="item-row despensa-item">
-                <div><b>${item.nombre}</b><br><small>Paquete: S/. ${Number(item.costoPaquete).toFixed(2)} (${item.cantidadPaquete} und)</small></div>
-                <span><b>S/. ${Number(item.costoUnitario).toFixed(2)} c/u</b><button class="btn-delete" onclick="eliminarDeDespensa(${i})">❌</button></span>
-            </div>
-        `).join('') || "<i>Aún no tienes insumos guardados.</i>";
-    }
-
-    function eliminarDeDespensa(i) {
-        despensaGlobal.splice(i, 1);
-        guardarDatosLocales();
-        renderizarDespensaGlobal();
-    }
-
-    function abrirModalCatalogo() {
-        if (!despensaGlobal.length) return showToast("Primero guarda materiales en tu despensa.");
-        const modal = document.getElementById('modalCantidadInsumo');
-        modal.style.display = "flex";
-        document.getElementById('modalInsumoTexto').innerHTML = `<select id='selectInsumoModal'>` +
-            despensaGlobal.map((item, i) => `<option value='${i}'>${item.nombre} (S/. ${Number(item.costoUnitario).toFixed(2)})</option>`).join('') + `</select>`;
-    }
-
-    function confirmarAdicionInsumo() {
-        const i = document.getElementById('selectInsumoModal').value;
-        const cant = parseFloat(document.getElementById('cantidadUnidadesUsadas').value);
-        if(!cant || cant <= 0) return showToast("Ingresa una cantidad válida");
-        const item = despensaGlobal[i];
-        materialesDelProductoActual.push({ nombre: item.nombre, cantidadUsada: cant, costoFinalCalculado: item.costoUnitario * cant });
-        cerrarModalCatalogo();
-        renderizarMaterialesProducto();
-        calcularPrecio();
-    }
-
-    function cerrarModalCatalogo() { document.getElementById('modalCantidadInsumo').style.display = "none"; }
-
-    function eliminarMaterialProducto(i) {
-        materialesDelProductoActual.splice(i, 1);
-        guardarDatosLocales();
-        renderizarMaterialesProducto();
-        calcularPrecio();
-    }
-
-    function renderizarMaterialesProducto() {
-        document.getElementById('listaMaterialesProducto').innerHTML = materialesDelProductoActual.map((item, i) => `
-            <div class="item-row">
-                <div><span>🎨 ${item.nombre}</span><br><small>Cantidad: ${item.cantidadUsada} unds</small></div>
-                <span><b>S/. ${Number(item.costoFinalCalculado).toFixed(2)}</b><button class="btn-delete" onclick="eliminarMaterialProducto(${i})">❌</button></span>
-            </div>
-        `).join('') || "<i>Selecciona materiales de tu despensa para empezar.</i>";
-    }
-
-    function recalcularGastosVariables() {
-        const totalMensual = numeroSeguro(document.getElementById('gastoLuz').value) + numeroSeguro(document.getElementById('gastoAgua').value) + numeroSeguro(document.getElementById('gastoAlquiler').value) + numeroSeguro(document.getElementById('gastoOtros').value);
-        const horasMes = Math.max(numeroSeguro(document.getElementById('horasMensualesTaller').value, 1), 1);
-        costoPorHoraOperativo = totalMensual / horasMes;
-        document.getElementById('costoGastoPorHora').innerText = "S/. " + costoPorHoraOperativo.toFixed(2);
-        calcularPrecio();
-    }
+    function cargarDatosLocales() { try{const crudo=localStorage.getItem(STORAGE_KEY); if(!crudo)return; const datos=JSON.parse(crudo); if(!datos||!Array.isArray(datos.despensaGlobal))return; restaurandoDatos=true; aplicarDatosRespaldo(datos);}catch(e){console.log("No se pudo cargar el respaldo local:",e);}finally{restaurandoDatos=false;} }
+    function exportarRespaldo() { guardarDatosLocales(); const fecha=new Date().toISOString().slice(0,10),blob=new Blob([JSON.stringify(obtenerDatosRespaldo(),null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement('a'); a.href=url;a.download=`aral-costos-respaldo-${fecha}.json`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);showToast("Respaldo descargado. Guárdalo en Drive, correo o WhatsApp para poder recuperarlo si cambias de celular."); }
+    function seleccionarArchivoRespaldo(){const input=document.getElementById('archivoRespaldo');input.value="";input.click();}
+    function importarRespaldo(event){const archivo=event.target.files&&event.target.files[0];if(!archivo)return;const lector=new FileReader();lector.onload=()=>{try{const datos=JSON.parse(lector.result);if(!datos||(datos.app!=="Aral Costos"&&!Array.isArray(datos.despensaGlobal)))throw Error("Archivo no compatible");if(!confirm("Importar este respaldo reemplazará los datos actuales de esta app. ¿Deseas continuar?"))return;restaurandoDatos=true;aplicarDatosRespaldo(datos);restaurandoDatos=false;renderizarDespensaGlobal();renderizarMaterialesProducto();renderizarEmpaques();renderizarGastosMensuales();recalcularGastosVariables();guardarDatosLocales();showToast("Respaldo importado correctamente.");}catch(e){restaurandoDatos=false;showToast("No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Aral Costos.");}};lector.readAsText(archivo);}
+    function cambiarPestana(tab){document.getElementById('tab-costear').style.display=tab==='costear'?'block':'none';document.getElementById('tab-despensa').style.display=tab==='despensa'?'block':'none';document.getElementById('tab-gastos').style.display=tab==='gastos'?'block':'none';document.getElementById('btnNavCostear').classList.toggle('active',tab==='costear');document.getElementById('btnNavDespensa').classList.toggle('active',tab==='despensa');document.getElementById('btnNavGastos').classList.toggle('active',tab==='gastos');if(tab==='despensa')renderizarDespensaGlobal();if(tab==='costear')calcularPrecio();}
+    function opcionesUnidad(seleccionada){return UNIDADES.map(u=>`<option value="${u}" ${seleccionada===u?'selected':''}>${ETIQUETAS_UNIDAD[u]}</option>`).join('');}
+    function actualizarUnidadPersonalizada(selectId,inputId){document.getElementById(inputId).parentElement.style.display=document.getElementById(selectId).value==='otro'?'block':'none';}
+    function unidadDesdeCampos(selectId,inputId){const u=document.getElementById(selectId).value;return u==='otro'?`otro:${document.getElementById(inputId).value.trim()}`:u;}
+    function unidadTexto(u){return String(u||'unidad').startsWith('otro:')?String(u).slice(5):u;}
+    function guardarEnDespensaGlobal(){const nombre=document.getElementById('despensaNombre').value.trim(),costo=numeroSeguro(valorInput('despensaCostoPaquete'),NaN),cant=numeroSeguro(valorInput('despensaCantidadPaquete'),NaN),unidad=unidadDesdeCampos('despensaUnidadCompra','despensaUnidadOtra');if(!nombre||!Number.isFinite(costo)||costo<=0||!Number.isFinite(cant)||cant<=0||(unidad==='otro:'||unidad==='otro'))return showToast("Completa nombre, cantidad, unidad y costo con valores válidos");despensaGlobal.push({nombre,costoPaquete:costo,cantidadPaquete:cant,unidadCompra:unidad,costoUnitario:costo/cant});guardarDatosLocales();renderizarDespensaGlobal();['despensaNombre','despensaCostoPaquete','despensaCantidadPaquete','despensaUnidadOtra'].forEach(id=>document.getElementById(id).value='');document.getElementById('despensaUnidadCompra').value='unidad';actualizarUnidadPersonalizada('despensaUnidadCompra','despensaUnidadOtra');showToast("Insumo guardado");}
+    function renderizarDespensaGlobal(){document.getElementById('listaDespensaGlobal').innerHTML=despensaGlobal.map((item,i)=>`<div class="item-row"><div><b>${escaparHtml(item.nombre)}</b><br><small>Compra: ${item.cantidadPaquete} ${escaparHtml(unidadTexto(item.unidadCompra))} — ${Number(item.costoPaquete).toFixed(2)}</small></div><span><b>${Number(item.costoUnitario).toFixed(4)} / ${escaparHtml(unidadTexto(item.unidadCompra))}</b><button class="btn-delete" onclick="eliminarDeDespensa(${i})">❌</button></span></div>`).join('')||"<i>Aún no tienes insumos guardados.</i>";}
+    function eliminarDeDespensa(i){despensaGlobal.splice(i,1);guardarDatosLocales();renderizarDespensaGlobal();}
+    function abrirModalCatalogo(){if(!despensaGlobal.length)return showToast("Primero guarda materiales en tu despensa.");document.getElementById('modalCantidadInsumo').style.display='flex';document.getElementById('modalInsumoTexto').innerHTML=`<select id="selectInsumoModal" onchange="prepararUnidadUsada()">${despensaGlobal.map((x,i)=>`<option value="${i}">${escaparHtml(x.nombre)} (${x.costoUnitario.toFixed(4)} / ${escaparHtml(unidadTexto(x.unidadCompra))})</option>`).join('')}</select>`;document.getElementById('cantidadUnidadesUsadas').value=1;prepararUnidadUsada();}
+    function prepararUnidadUsada(){const idx=Number(document.getElementById('selectInsumoModal').value),compra=despensaGlobal[idx].unidadCompra,select=document.getElementById('unidadUsada');select.innerHTML=opcionesUnidad(compra.startsWith('otro:')?'otro':compra);if(compra.startsWith('otro:'))document.getElementById('unidadUsadaOtra').value=compra.slice(5);document.getElementById('unidadUsadaOtra').style.display=compra==='otro'?'block':'none';}
+    function factorUnidad(u){return ({kg:['masa',1000],g:['masa',1],litro:['volumen',1000],ml:['volumen',1],metro:['longitud',100],cm:['longitud',1]})[u]||null;}
+    function convertirCantidad(cantidad,desde,hasta){if(desde===hasta)return cantidad;const a=factorUnidad(desde),b=factorUnidad(hasta);if(a&&b&&a[0]===b[0])return cantidad*a[1]/b[1];return null;}
+    function confirmarAdicionInsumo(){const idx=Number(document.getElementById('selectInsumoModal').value),item=despensaGlobal[idx],cant=numeroSeguro(valorInput('cantidadUnidadesUsadas'),0),unidad=unidadDesdeCampos('unidadUsada','unidadUsadaOtra'),cantidadEnCompra=convertirCantidad(cant,unidad,item.unidadCompra);if(cant<=0)return showToast("Ingresa una cantidad válida");if(cantidadEnCompra===null)return showToast("La unidad usada debe ser igual o convertible a la unidad de compra.");materialesDelProductoActual.push({nombre:item.nombre,cantidadUsada:cant,unidadUsada:unidad,costoFinalCalculado:item.costoPaquete*cantidadEnCompra/item.cantidadPaquete});cerrarModalCatalogo();renderizarMaterialesProducto();calcularPrecio();}
+    function cerrarModalCatalogo(){document.getElementById('modalCantidadInsumo').style.display='none';}
+    function eliminarMaterialProducto(i){materialesDelProductoActual.splice(i,1);guardarDatosLocales();renderizarMaterialesProducto();calcularPrecio();}
+    function renderizarMaterialesProducto(){document.getElementById('listaMaterialesProducto').innerHTML=materialesDelProductoActual.map((item,i)=>`<div class="item-row"><div><span>🎨 ${escaparHtml(item.nombre)}</span><br><small>Cantidad: ${item.cantidadUsada} ${escaparHtml(unidadTexto(item.unidadUsada))}</small></div><span><b>${Number(item.costoFinalCalculado).toFixed(2)}</b><button class="btn-delete" onclick="eliminarMaterialProducto(${i})">❌</button></span></div>`).join('')||"<i>Selecciona materiales de tu despensa para empezar.</i>";}
+    function agregarEmpaque(){empaquesProducto.push({nombre:"",monto:0});renderizarEmpaques();}
+    function actualizarFila(lista,idx,campo,valor){lista[idx][campo]=campo==='monto'?numeroSeguro(valor,0):valor;if(lista===empaquesProducto)calcularPrecio();else recalcularGastosVariables();guardarDatosLocales();}
+    function eliminarFila(lista,idx){lista.splice(idx,1);if(lista===empaquesProducto){renderizarEmpaques();calcularPrecio();}else{renderizarGastosMensuales();recalcularGastosVariables();}guardarDatosLocales();}
+    function renderizarEmpaques(){document.getElementById('listaEmpaques').innerHTML=empaquesProducto.map((x,i)=>`<div class="dynamic-row"><input aria-label="Nombre del empaque" placeholder="Ej: Caja" value="${escaparHtml(x.nombre)}" oninput="actualizarFila(empaquesProducto,${i},'nombre',this.value)"><input aria-label="Monto del empaque" type="number" min="0" step="any" placeholder="Monto" value="${x.monto||''}" oninput="actualizarFila(empaquesProducto,${i},'monto',this.value)"><button class="btn-delete" onclick="eliminarFila(empaquesProducto,${i})">❌</button></div>`).join('')||'<i>Aún no agregas empaques.</i>';}
+    function agregarGastoMensual(){gastosMensuales.push({nombre:"",monto:0});renderizarGastosMensuales();}
+    function renderizarGastosMensuales(){document.getElementById('listaGastosMensuales').innerHTML=gastosMensuales.map((x,i)=>`<div class="dynamic-row"><input aria-label="Nombre del gasto" placeholder="Ej: Electricidad" value="${escaparHtml(x.nombre)}" oninput="actualizarFila(gastosMensuales,${i},'nombre',this.value)"><input aria-label="Monto mensual" type="number" min="0" step="any" placeholder="Monto mensual" value="${x.monto||''}" oninput="actualizarFila(gastosMensuales,${i},'monto',this.value)"><button class="btn-delete" onclick="eliminarFila(gastosMensuales,${i})">❌</button></div>`).join('')||'<i>Agrega tus gastos mensuales.</i>';}
+    function recalcularGastosVariables(){const totalMensual=gastosMensuales.reduce((s,x)=>s+numeroSeguro(x.monto),0),horasMes=Math.max(numeroSeguro(valorInput('horasMensualesTaller'),1),1);costoPorHoraOperativo=totalMensual/horasMes;const sym=document.getElementById('currency').selectedOptions[0].dataset.symbol;document.getElementById('costoGastoPorHora').innerText=sym+' '+costoPorHoraOperativo.toFixed(2);calcularPrecio();}
 
     function updateHorasLabel(v, recalcular = true) {
         document.getElementById('horasLabel').innerText = v + ' hrs';
