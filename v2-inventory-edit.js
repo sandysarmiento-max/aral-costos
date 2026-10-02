@@ -1,0 +1,235 @@
+// Edición de insumos para Aral Costos V2.
+// Cargar después de v2-products.js.
+
+(function () {
+  const phone = document.querySelector('.phone-container');
+  const lista = document.getElementById('listaDespensaGlobal');
+  if (!phone || !lista) return;
+
+  let indiceEdicion = null;
+
+  function numero(valor, respaldo = 0) {
+    const n = parseFloat(valor);
+    return Number.isFinite(n) ? n : respaldo;
+  }
+
+  function escapar(valor) {
+    return typeof escaparHtml === 'function'
+      ? escaparHtml(valor)
+      : String(valor ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function textoUnidad(unidad) {
+    const u = String(unidad || 'unidad');
+    return u.startsWith('otro:') ? u.slice(5) : u;
+  }
+
+  function simboloMoneda() {
+    return document.getElementById('currency')?.selectedOptions?.[0]?.dataset?.symbol || 'S/.';
+  }
+
+  function formatoCosto(valor) {
+    const n = Number(valor) || 0;
+    let texto = n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+    if (!texto.includes('.')) texto += '.00';
+    else if (texto.split('.')[1].length < 2) texto += '0';
+    return texto;
+  }
+
+  function unidadBase(unidad) {
+    const u = String(unidad || 'unidad');
+    return u.startsWith('otro:') ? 'otro' : u;
+  }
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .despensa-actions-v2 {
+      display:flex;
+      align-items:center;
+      gap:4px;
+      margin-left:8px;
+      flex:0 0 auto;
+    }
+    .despensa-edit-btn {
+      border:none;
+      background:none;
+      cursor:pointer;
+      color:var(--texto-secundario);
+      font-size:.95rem;
+      padding:3px 4px;
+      border-radius:6px;
+    }
+    .despensa-edit-btn:hover { background:var(--acento-lavanda); }
+    .despensa-row-v2 > div:first-child { min-width:0; }
+    .despensa-row-v2 .despensa-cost-v2 {
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:4px;
+      text-align:right;
+      min-width:0;
+    }
+  `;
+  document.head.appendChild(style);
+
+  const modal = document.createElement('div');
+  modal.className = 'modal';
+  modal.id = 'modalEditarInsumo';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <div class="section-title">Editar insumo</div>
+      <div class="input-group">
+        <label>Nombre del insumo</label>
+        <input type="text" id="editarInsumoNombre" maxlength="80">
+      </div>
+      <div class="flex-inputs">
+        <div style="flex:1;">
+          <label>Cantidad comprada</label>
+          <input type="number" id="editarInsumoCantidad" min="0" step="any">
+        </div>
+        <div style="flex:1;">
+          <label>Unidad de compra</label>
+          <select id="editarInsumoUnidad"></select>
+        </div>
+      </div>
+      <div class="input-group" id="editarInsumoOtraWrap" style="display:none;margin-top:8px;">
+        <label>Nombre de la unidad</label>
+        <input type="text" id="editarInsumoOtra" maxlength="30" placeholder="Ej: plancha, frasco">
+      </div>
+      <div class="input-group" style="margin-top:12px;">
+        <label>Costo total de la compra</label>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <span id="editarInsumoSimbolo" style="font-weight:700;color:var(--texto-secundario);"></span>
+          <input type="number" id="editarInsumoCosto" min="0" step="any">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button type="button" class="btn-main btn-secondary" id="cancelarEditarInsumo">Cancelar</button>
+        <button type="button" class="btn-main" id="guardarEditarInsumo">Guardar cambios</button>
+      </div>
+    </div>
+  `;
+  phone.appendChild(modal);
+
+  const nombre = modal.querySelector('#editarInsumoNombre');
+  const cantidad = modal.querySelector('#editarInsumoCantidad');
+  const unidad = modal.querySelector('#editarInsumoUnidad');
+  const otraWrap = modal.querySelector('#editarInsumoOtraWrap');
+  const otra = modal.querySelector('#editarInsumoOtra');
+  const costo = modal.querySelector('#editarInsumoCosto');
+  const simbolo = modal.querySelector('#editarInsumoSimbolo');
+
+  function cargarOpcionesUnidad(seleccionada) {
+    unidad.innerHTML = typeof opcionesUnidad === 'function'
+      ? opcionesUnidad(seleccionada)
+      : ['unidad','kg','g','litro','ml','metro','cm','gota','otro'].map(u => `<option value="${u}" ${u === seleccionada ? 'selected' : ''}>${u}</option>`).join('');
+  }
+
+  function actualizarOtraUnidad() {
+    otraWrap.style.display = unidad.value === 'otro' ? 'block' : 'none';
+  }
+
+  unidad.addEventListener('change', actualizarOtraUnidad);
+
+  function abrirEdicion(i) {
+    const item = despensaGlobal[i];
+    if (!item) return;
+    indiceEdicion = i;
+    nombre.value = item.nombre || '';
+    cantidad.value = item.cantidadPaquete || '';
+    const base = unidadBase(item.unidadCompra);
+    cargarOpcionesUnidad(base);
+    otra.value = base === 'otro' ? textoUnidad(item.unidadCompra) : '';
+    actualizarOtraUnidad();
+    costo.value = item.costoPaquete || '';
+    simbolo.textContent = simboloMoneda();
+    modal.style.display = 'flex';
+    setTimeout(() => nombre.focus(), 50);
+  }
+
+  function cerrarEdicion() {
+    indiceEdicion = null;
+    modal.style.display = 'none';
+  }
+
+  modal.querySelector('#cancelarEditarInsumo').addEventListener('click', cerrarEdicion);
+  modal.addEventListener('click', event => {
+    if (event.target === modal) cerrarEdicion();
+  });
+
+  modal.querySelector('#guardarEditarInsumo').addEventListener('click', () => {
+    if (!Number.isInteger(indiceEdicion) || !despensaGlobal[indiceEdicion]) return;
+
+    const nuevoNombre = String(nombre.value || '').trim();
+    const nuevaCantidad = numero(cantidad.value, 0);
+    const nuevoCosto = numero(costo.value, 0);
+    let nuevaUnidad = unidad.value || 'unidad';
+    if (nuevaUnidad === 'otro') {
+      const personalizada = String(otra.value || '').trim();
+      if (!personalizada) return showToast('Escribe el nombre de la unidad.');
+      nuevaUnidad = `otro:${personalizada}`;
+    }
+
+    if (!nuevoNombre) return showToast('Escribe el nombre del insumo.');
+    if (nuevaCantidad <= 0) return showToast('La cantidad comprada debe ser mayor que 0.');
+    if (nuevoCosto < 0) return showToast('El costo no puede ser negativo.');
+
+    const anterior = despensaGlobal[indiceEdicion];
+    const nombreAnterior = String(anterior.nombre || '').trim();
+
+    despensaGlobal[indiceEdicion] = {
+      ...anterior,
+      nombre: nuevoNombre,
+      cantidadPaquete: nuevaCantidad,
+      unidadCompra: nuevaUnidad,
+      costoPaquete: nuevoCosto,
+      costoUnitario: nuevoCosto / nuevaCantidad
+    };
+
+    // Si se renombra el insumo, mantiene vinculados los materiales del cálculo actual.
+    if (nombreAnterior && nombreAnterior !== nuevoNombre && Array.isArray(materialesDelProductoActual)) {
+      materialesDelProductoActual.forEach(item => {
+        if (String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase()) {
+          item.nombre = nuevoNombre;
+        }
+      });
+    }
+
+    guardarDatosLocales();
+    renderizarDespensaGlobal();
+    if (typeof renderizarMaterialesProducto === 'function') renderizarMaterialesProducto();
+    if (typeof calcularPrecio === 'function') calcularPrecio();
+    cerrarEdicion();
+    showToast('Insumo actualizado.');
+  });
+
+  // Mantiene el render existente y añade el botón Editar.
+  renderizarDespensaGlobal = function renderizarDespensaGlobalEditable() {
+    const contenedor = document.getElementById('listaDespensaGlobal');
+    if (!contenedor) return;
+    const sym = simboloMoneda();
+    contenedor.innerHTML = despensaGlobal.map((item, i) => `
+      <div class="item-row despensa-row-v2">
+        <div>
+          <b>${escapar(item.nombre)}</b><br>
+          <small>Compra: ${item.cantidadPaquete} ${escapar(textoUnidad(item.unidadCompra))} — ${sym} ${Number(item.costoPaquete).toFixed(2)}</small>
+        </div>
+        <div class="despensa-cost-v2">
+          <b>${sym} ${formatoCosto(item.costoUnitario)} por ${escapar(textoUnidad(item.unidadCompra))}</b>
+          <div class="despensa-actions-v2">
+            <button type="button" class="despensa-edit-btn" data-editar-insumo="${i}" aria-label="Editar ${escapar(item.nombre)}" title="Editar">✏️</button>
+            <button type="button" class="btn-delete" onclick="eliminarDeDespensa(${i})" aria-label="Eliminar ${escapar(item.nombre)}">❌</button>
+          </div>
+        </div>
+      </div>
+    `).join('') || '<i>Aún no tienes insumos guardados.</i>';
+  };
+
+  lista.addEventListener('click', event => {
+    const btn = event.target.closest('[data-editar-insumo]');
+    if (!btn) return;
+    abrirEdicion(Number(btn.dataset.editarInsumo));
+  });
+
+  renderizarDespensaGlobal();
+})();
