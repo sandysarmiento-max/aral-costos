@@ -43,31 +43,69 @@
 
   const style = document.createElement('style');
   style.textContent = `
+    .despensa-row-v2 {
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) minmax(120px,auto) 30px;
+      gap:10px;
+      align-items:center !important;
+    }
+    .despensa-row-v2 > div:first-child { min-width:0; }
+    .despensa-row-v2 > div:first-child b {
+      font-weight:500;
+    }
+    .despensa-row-v2 .despensa-cost-v2 {
+      display:block;
+      min-width:0;
+      text-align:right;
+    }
+    .despensa-row-v2 .despensa-cost-v2 > b {
+      display:block;
+      font-weight:600;
+      line-height:1.25;
+      color:#2F6F73;
+      overflow-wrap:anywhere;
+    }
+    body[data-aral-style="neutral"] .despensa-row-v2 .despensa-cost-v2 > b {
+      color:#315B55;
+    }
     .despensa-actions-v2 {
       display:flex;
+      flex-direction:column;
+      justify-content:center;
       align-items:center;
-      gap:4px;
-      margin-left:8px;
+      gap:3px;
+      margin:0;
       flex:0 0 auto;
     }
-    .despensa-edit-btn {
+    .despensa-edit-btn,
+    .despensa-actions-v2 .btn-delete {
+      width:26px;
+      height:26px;
+      display:grid;
+      place-items:center;
       border:none;
-      background:none;
+      background:transparent;
       cursor:pointer;
-      color:var(--texto-secundario);
-      font-size:.95rem;
-      padding:3px 4px;
+      padding:0;
+      margin:0;
       border-radius:6px;
+      line-height:1;
     }
-    .despensa-edit-btn:hover { background:var(--acento-lavanda); }
-    .despensa-row-v2 > div:first-child { min-width:0; }
-    .despensa-row-v2 .despensa-cost-v2 {
-      display:flex;
-      align-items:center;
-      justify-content:flex-end;
-      gap:4px;
-      text-align:right;
-      min-width:0;
+    .despensa-edit-btn {
+      color:var(--texto-secundario);
+      font-size:.9rem;
+    }
+    .despensa-actions-v2 .btn-delete {
+      font-size:.9rem;
+    }
+    .despensa-edit-btn:hover,
+    .despensa-actions-v2 .btn-delete:hover { background:var(--acento-lavanda); }
+
+    @media (max-width:380px) {
+      .despensa-row-v2 {
+        grid-template-columns:minmax(0,1fr) minmax(104px,auto) 28px;
+        gap:7px;
+      }
     }
   `;
   document.head.appendChild(style);
@@ -186,7 +224,6 @@
       costoUnitario: nuevoCosto / nuevaCantidad
     };
 
-    // Si se renombra el insumo, mantiene vinculados los materiales del cálculo actual.
     if (nombreAnterior && nombreAnterior !== nuevoNombre && Array.isArray(materialesDelProductoActual)) {
       materialesDelProductoActual.forEach(item => {
         if (String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase()) {
@@ -203,7 +240,6 @@
     showToast('Insumo actualizado.');
   });
 
-  // Mantiene el render existente y añade el botón Editar.
   renderizarDespensaGlobal = function renderizarDespensaGlobalEditable() {
     const contenedor = document.getElementById('listaDespensaGlobal');
     if (!contenedor) return;
@@ -216,10 +252,10 @@
         </div>
         <div class="despensa-cost-v2">
           <b>${sym} ${formatoCosto(item.costoUnitario)} por ${escapar(textoUnidad(item.unidadCompra))}</b>
-          <div class="despensa-actions-v2">
-            <button type="button" class="despensa-edit-btn" data-editar-insumo="${i}" aria-label="Editar ${escapar(item.nombre)}" title="Editar">✏️</button>
-            <button type="button" class="btn-delete" onclick="eliminarDeDespensa(${i})" aria-label="Eliminar ${escapar(item.nombre)}">❌</button>
-          </div>
+        </div>
+        <div class="despensa-actions-v2">
+          <button type="button" class="despensa-edit-btn" data-editar-insumo="${i}" aria-label="Editar ${escapar(item.nombre)}" title="Editar">✏️</button>
+          <button type="button" class="btn-delete" onclick="eliminarDeDespensa(${i})" aria-label="Eliminar ${escapar(item.nombre)}">❌</button>
         </div>
       </div>
     `).join('') || '<i>Aún no tienes insumos guardados.</i>';
