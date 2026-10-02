@@ -43,7 +43,7 @@
       showToast('Respaldo importado correctamente.');
     } catch (error) {
       restaurandoDatos = false;
-      showToast('No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde esta app.');
+      showToast('No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Costalia.');
     }
   }
 
@@ -66,13 +66,15 @@
     lector.onload = () => {
       try {
         const datos = JSON.parse(lector.result);
-        if (!datos || (datos.app !== 'Aral Costos' && !Array.isArray(datos.despensaGlobal))) {
+        const appCompatible = datos && (datos.app === 'Costalia' || datos.app === 'Aral Costos');
+        const estructuraCompatible = datos && Array.isArray(datos.despensaGlobal);
+        if (!datos || (!appCompatible && !estructuraCompatible)) {
           throw new Error('Archivo no compatible');
         }
         datosPendientes = datos;
         modal.style.display = 'flex';
       } catch (error) {
-        showToast('No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde esta app.');
+        showToast('No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Costalia.');
       }
     };
     lector.onerror = () => showToast('No se pudo leer el archivo de respaldo.');
