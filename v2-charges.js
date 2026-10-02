@@ -70,8 +70,8 @@
         </div>
         <label style="margin-bottom:5px;">Cómo se aplica</label>
         <select aria-label="Cómo se aplica el cargo" data-cargo-index="${i}" data-cargo-campo="tratamiento">
-          <option value="sumar" ${cargo.tratamiento === 'sumar' ? 'selected' : ''}>Se suma al precio</option>
-          <option value="descontar" ${cargo.tratamiento === 'descontar' ? 'selected' : ''}>Se descuenta de la venta</option>
+          <option value="sumar" ${cargo.tratamiento === 'sumar' ? 'selected' : ''}>Agregar al precio final</option>
+          <option value="descontar" ${cargo.tratamiento === 'descontar' ? 'selected' : ''}>Descontar de mi precio actual</option>
         </select>
       </div>
     `).join('') || '<i>No has agregado impuestos ni cargos.</i>';
@@ -112,7 +112,6 @@
     guardarDatosLocales();
   });
 
-  // Amplía el respaldo V2 para incluir cargos.
   const obtenerFormularioAnterior = obtenerFormularioActual;
   obtenerFormularioActual = function obtenerFormularioActualConCargos() {
     return {
@@ -129,7 +128,6 @@
     calcularPrecio();
   };
 
-  // Extiende el cálculo que dejó v2-profit.js. La base es costo + ganancia.
   calcularPrecio = function calcularPrecioConCargos() {
     const materiales = materialesDelProductoActual.reduce((suma, item) => suma + (Number(item.costoFinalCalculado) || 0), 0);
     const horas = numero(document.getElementById('horas')?.value, 0);
@@ -142,8 +140,8 @@
     const modo = document.getElementById('modoGanancia')?.value || 'porcentaje';
     const margen = Math.max(numero(document.getElementById('margen')?.value, 0), 0);
     const fija = Math.max(numero(document.getElementById('gananciaFija')?.value, 0), 0);
-    const ganancia = modo === 'fijo' ? fija : costoTotal * (margen / 100);
-    const precioBase = costoTotal + ganancia;
+    const gananciaDeseada = modo === 'fijo' ? fija : costoTotal * (margen / 100);
+    const precioBase = costoTotal + gananciaDeseada;
 
     let totalSumado = 0;
     let totalDescontado = 0;
@@ -166,17 +164,23 @@
       }
     });
 
-    // Lo que se suma aumenta el precio al cliente. Lo que se descuenta representa
-    // un importe retenido de la venta; no baja el precio mostrado al cliente.
+    // Los cargos que se agregan elevan lo que paga el cliente, pero luego salen de la venta.
+    // Los cargos que se descuentan reducen directamente el importe que queda para el negocio.
     const precioCliente = precioBase + totalSumado;
-    const netoRecibido = precioCliente - totalDescontado;
+    const netoDespuesDeCargos = precioCliente - totalSumado - totalDescontado;
+    const gananciaReal = netoDespuesDeCargos - costoTotal;
     const sym = simbolo();
 
     document.getElementById('precioFinal').innerText = `${sym} ${precioCliente.toFixed(2)}`;
 
     const lineasCargos = detalles.map(item =>
-      `• ${escapar(item.nombre)} (${item.tratamiento === 'sumar' ? 'se suma' : 'se descuenta'}): ${sym} ${item.importe.toFixed(2)}<br>`
+      `• ${escapar(item.nombre)} (${item.tratamiento === 'sumar' ? 'agregado al precio' : 'descontado del precio'}): ${sym} ${item.importe.toFixed(2)}<br>`
     ).join('');
+
+    const bajaGanancia = gananciaReal < gananciaDeseada - 0.005;
+    const gananciaHtml = bajaGanancia
+      ? `<div style="margin-top:8px;padding:10px;border-radius:10px;background:#fff1e8;color:#8a4b2f;font-weight:700;line-height:1.35;">⚠ Tu ganancia real baja de ${sym} ${gananciaDeseada.toFixed(2)} a ${sym} ${gananciaReal.toFixed(2)}. Considera subir tu precio.</div>`
+      : `<div style="margin-top:8px;padding:10px;border-radius:10px;background:var(--acento-menta);color:var(--texto-menta);font-weight:700;">Ganancia real: ${sym} ${gananciaReal.toFixed(2)}</div>`;
 
     document.getElementById('desgloseCostos').innerHTML = `
       • Materiales: ${sym} ${materiales.toFixed(2)}<br>
@@ -184,15 +188,15 @@
       • Gastos operativos (${horas}h): ${sym} ${costoTaller.toFixed(2)}<br>
       • Empaque: ${sym} ${empaque.toFixed(2)}<br>
       • Costo total: ${sym} ${costoTotal.toFixed(2)}<br>
-      • Ganancia: ${sym} ${ganancia.toFixed(2)}<br>
+      • Ganancia deseada: ${sym} ${gananciaDeseada.toFixed(2)}<br>
       ${lineasCargos}
-      ${totalDescontado > 0 ? `• Neto que recibes: ${sym} ${netoRecibido.toFixed(2)}` : ''}
+      ${detalles.length ? `• Neto después de cargos: ${sym} ${netoDespuesDeCargos.toFixed(2)}<br>` : ''}
+      ${gananciaHtml}
     `;
 
     guardarDatosLocales();
   };
 
-  // Restaura los campos añadidos por scripts cargados después del script principal.
   try {
     const crudo = localStorage.getItem('aralCostosDataV1');
     const guardado = crudo ? JSON.parse(crudo) : null;
