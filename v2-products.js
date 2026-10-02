@@ -10,6 +10,7 @@
 
   let productos = [];
   let productoEnEdicionId = null;
+  let productoPendienteEliminarId = null;
   let fotoTemporal = '';
 
   function numero(valor, respaldo = 0) {
@@ -101,7 +102,6 @@
     return Array.isArray(items) ? items.map(normalizarProducto).filter(Boolean) : [];
   }
 
-  // Recupera productos del respaldo local que el index ya cargó antes de este módulo.
   try {
     const crudo = localStorage.getItem('aralCostosDataV1');
     const guardado = crudo ? JSON.parse(crudo) : null;
@@ -110,7 +110,6 @@
     productos = [];
   }
 
-  // Integra los productos con el respaldo general V2.
   const obtenerDatosRespaldoAnterior = obtenerDatosRespaldo;
   obtenerDatosRespaldo = function obtenerDatosRespaldoConProductos() {
     return {
@@ -157,69 +156,68 @@
       align-items:flex-start;
       justify-content:space-between;
       gap:10px;
-      margin-bottom:14px;
+      margin-bottom:12px;
     }
-    .productos-grid { display:grid; gap:12px; }
+    .productos-grid { display:grid; gap:9px; }
     .producto-card {
       display:grid;
-      grid-template-columns:76px 1fr;
-      gap:12px;
-      padding:12px;
+      grid-template-columns:68px 1fr;
+      gap:10px;
+      padding:10px;
       border:1px solid var(--borde);
-      border-radius:14px;
+      border-radius:13px;
       background:var(--bg-tarjeta);
     }
-    .producto-foto {
-      width:76px;
-      height:76px;
-      border-radius:12px;
-      object-fit:cover;
-      background:var(--bg-principal);
-      border:1px solid var(--borde);
-    }
+    .producto-foto,
     .producto-foto-placeholder {
-      width:76px;
-      height:76px;
-      border-radius:12px;
+      width:68px;
+      height:68px;
+      border-radius:11px;
+      border:1px solid var(--borde);
+      background:var(--bg-principal);
+    }
+    .producto-foto { object-fit:cover; }
+    .producto-foto-placeholder {
       display:flex;
       align-items:center;
       justify-content:center;
-      background:var(--bg-principal);
-      border:1px solid var(--borde);
       color:var(--texto-secundario);
-      font-size:1.4rem;
+      font-size:1.25rem;
     }
     .producto-card h3 {
-      margin:0 0 4px;
-      font-size:.98rem;
+      margin:0 0 2px;
+      font-size:.94rem;
       color:var(--texto-principal);
-      line-height:1.25;
+      line-height:1.22;
     }
     .producto-precio {
-      font-size:1rem;
+      font-size:.96rem;
       font-weight:800;
       color:var(--texto-menta);
-      margin-bottom:8px;
+      margin-bottom:3px;
     }
     .producto-meta {
-      font-size:.76rem;
+      font-size:.72rem;
       color:var(--texto-secundario);
-      margin-bottom:8px;
+      margin-bottom:5px;
     }
     .producto-actions {
       display:flex;
-      flex-wrap:wrap;
-      gap:6px;
+      gap:4px;
     }
     .producto-actions button {
+      width:30px;
+      height:30px;
+      display:grid;
+      place-items:center;
       border:1px solid var(--borde);
       background:var(--bg-principal);
       color:var(--texto-principal);
-      padding:6px 8px;
+      padding:0;
       border-radius:8px;
       cursor:pointer;
-      font-size:.75rem;
-      font-weight:600;
+      font-size:.88rem;
+      line-height:1;
     }
     .producto-actions button[data-action="delete"] { color:#A64B4B; }
     .producto-empty {
@@ -241,10 +239,15 @@
       margin:0 auto 10px;
     }
     .producto-foto-preview.visible { display:block; }
+    .producto-delete-texto {
+      color:var(--texto-secundario);
+      font-size:.9rem;
+      line-height:1.45;
+      margin:4px 0 16px;
+    }
   `;
   document.head.appendChild(style);
 
-  // Pestaña Productos.
   const tabProductos = document.createElement('main');
   tabProductos.id = 'tab-productos';
   tabProductos.style.display = 'none';
@@ -268,7 +271,6 @@
   btnProductos.onclick = () => cambiarPestana('productos');
   nav.insertBefore(btnProductos, document.getElementById('btnNavGastos'));
 
-  // Botón Guardar como producto debajo del resultado.
   const saveWrap = document.createElement('div');
   saveWrap.className = 'producto-save-wrap';
   saveWrap.innerHTML = `
@@ -280,7 +282,6 @@
   `;
   resultadoCard.appendChild(saveWrap);
 
-  // Modal de nombre y foto.
   const modal = document.createElement('div');
   modal.className = 'modal';
   modal.id = 'modalGuardarProducto';
@@ -304,6 +305,21 @@
     </div>
   `;
   phone.appendChild(modal);
+
+  const modalEliminar = document.createElement('div');
+  modalEliminar.className = 'modal';
+  modalEliminar.id = 'modalEliminarProducto';
+  modalEliminar.innerHTML = `
+    <div class="modal-content">
+      <div class="section-title">Eliminar producto</div>
+      <div id="textoEliminarProducto" class="producto-delete-texto"></div>
+      <div style="display:flex;gap:8px;">
+        <button type="button" class="btn-main btn-secondary" id="cancelarEliminarProducto">Cancelar</button>
+        <button type="button" class="btn-main" id="confirmarEliminarProducto" style="background:#D96B68;color:white;">Eliminar</button>
+      </div>
+    </div>
+  `;
+  phone.appendChild(modalEliminar);
 
   function actualizarEstadoEdicion() {
     const banner = document.getElementById('productoEditBanner');
@@ -389,9 +405,9 @@
             <div class="producto-precio">${resumen.simbolo} ${resumen.precio.toFixed(2)}</div>
             <div class="producto-meta">Precio actual · ${nInsumos} ${nInsumos === 1 ? 'insumo' : 'insumos'}</div>
             <div class="producto-actions">
-              <button type="button" data-action="edit" data-id="${escapar(prod.id)}">Editar</button>
-              <button type="button" data-action="duplicate" data-id="${escapar(prod.id)}">Duplicar</button>
-              <button type="button" data-action="delete" data-id="${escapar(prod.id)}">Eliminar</button>
+              <button type="button" data-action="edit" data-id="${escapar(prod.id)}" aria-label="Editar ${escapar(prod.nombre)}" title="Editar">✏️</button>
+              <button type="button" data-action="duplicate" data-id="${escapar(prod.id)}" aria-label="Duplicar ${escapar(prod.nombre)}" title="Duplicar">⧉</button>
+              <button type="button" data-action="delete" data-id="${escapar(prod.id)}" aria-label="Eliminar ${escapar(prod.nombre)}" title="Eliminar">🗑️</button>
             </div>
           </div>
         </div>
@@ -464,11 +480,36 @@
     modal.style.display = 'none';
   }
 
+  function abrirModalEliminar(prod) {
+    productoPendienteEliminarId = prod.id;
+    const texto = document.getElementById('textoEliminarProducto');
+    if (texto) texto.textContent = `¿Quieres eliminar “${prod.nombre}”? Esta acción no se puede deshacer.`;
+    modalEliminar.style.display = 'flex';
+  }
+
+  function cerrarModalEliminar() {
+    productoPendienteEliminarId = null;
+    modalEliminar.style.display = 'none';
+  }
+
   document.getElementById('btnGuardarProducto').addEventListener('click', abrirModalGuardar);
   document.getElementById('cancelarGuardarProducto').addEventListener('click', cerrarModalGuardar);
   document.getElementById('salirEdicionProducto').addEventListener('click', () => {
     productoEnEdicionId = null;
     actualizarEstadoEdicion();
+  });
+
+  document.getElementById('cancelarEliminarProducto').addEventListener('click', cerrarModalEliminar);
+  document.getElementById('confirmarEliminarProducto').addEventListener('click', () => {
+    const prod = productos.find(x => x.id === productoPendienteEliminarId);
+    if (!prod) return cerrarModalEliminar();
+    productos = productos.filter(x => x.id !== prod.id);
+    if (productoEnEdicionId === prod.id) productoEnEdicionId = null;
+    guardarDatosLocales();
+    actualizarEstadoEdicion();
+    renderizarProductos();
+    cerrarModalEliminar();
+    showToast('Producto eliminado.');
   });
 
   document.getElementById('fotoProductoArchivo').addEventListener('change', async event => {
@@ -529,17 +570,10 @@
     }
 
     if (btn.dataset.action === 'delete') {
-      if (!confirm(`¿Eliminar “${prod.nombre}”?`)) return;
-      productos = productos.filter(x => x.id !== prod.id);
-      if (productoEnEdicionId === prod.id) productoEnEdicionId = null;
-      guardarDatosLocales();
-      actualizarEstadoEdicion();
-      renderizarProductos();
-      showToast('Producto eliminado.');
+      abrirModalEliminar(prod);
     }
   });
 
-  // Amplía la navegación original sin modificar index.html.
   const cambiarPestanaAnterior = cambiarPestana;
   cambiarPestana = function cambiarPestanaConProductos(tab) {
     if (tab === 'productos') {
