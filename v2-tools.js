@@ -7,7 +7,6 @@
   const phone = document.querySelector('.phone-container');
   if (!body || !phone) return;
 
-  // --- Tema Suave / Neutro -------------------------------------------------
   const style = document.createElement('style');
   style.textContent = `
     body[data-aral-style="neutral"] {
@@ -36,17 +35,37 @@
       position: absolute;
       right: 16px;
       bottom: 82px;
-      width: 52px;
-      height: 52px;
+      width: 54px;
+      height: 54px;
       border-radius: 50%;
       border: none;
-      background: var(--texto-principal);
-      color: var(--bg-tarjeta);
-      font-size: 1.35rem;
+      background: #334e5d;
       cursor: pointer;
       box-shadow: 0 8px 24px rgba(0,0,0,.18);
       z-index: 35;
+      display:grid;
+      grid-template-columns:repeat(2, 12px);
+      grid-template-rows:repeat(2, 12px);
+      gap:4px;
+      place-content:center;
+      padding:0;
     }
+    .aral-calc-btn span {
+      width:12px;
+      height:12px;
+      border-radius:3px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:10px;
+      line-height:1;
+      font-weight:800;
+      color:#334e5d;
+    }
+    .aral-calc-btn .i-plus { background:#ffd76a; }
+    .aral-calc-btn .i-minus { background:#eb6256; }
+    .aral-calc-btn .i-eq { background:#31a2d6; }
+    .aral-calc-btn .i-times { background:#edf2f4; }
 
     .aral-calc-panel {
       position: absolute;
@@ -61,16 +80,8 @@
       z-index: 40;
       display: none;
     }
-
     .aral-calc-panel.open { display: block; }
-
-    .aral-calc-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-
+    .aral-calc-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .aral-calc-display {
       width: 100%;
       padding: 12px;
@@ -84,14 +95,18 @@
       margin-bottom: 10px;
       overflow: hidden;
       white-space: nowrap;
+      min-height: 50px;
+      display:flex;
+      align-items:center;
+      justify-content:flex-end;
+      gap:8px;
     }
-
-    .aral-calc-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+    .aral-calc-op-active {
+      min-width:22px;
+      color:var(--primario-rosa-hover);
+      font-weight:800;
     }
-
+    .aral-calc-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
     .aral-calc-key {
       padding: 11px 6px;
       border: 1px solid var(--borde);
@@ -101,9 +116,8 @@
       font-size: 1rem;
       cursor: pointer;
     }
-
     .aral-calc-key.op { background: var(--acento-lavanda); }
-    .aral-calc-key.eq { background: var(--primario-rosa); font-weight: 700; }
+    .aral-calc-key.eq { background: var(--primario-rosa); font-weight:700; }
   `;
   document.head.appendChild(style);
 
@@ -132,11 +146,13 @@
     aplicarEstilo(actual === 'soft' ? 'neutral' : 'soft');
   };
 
-  // --- Calculadora flotante -------------------------------------------------
   const calcBtn = document.createElement('button');
   calcBtn.type = 'button';
   calcBtn.className = 'aral-calc-btn';
-  calcBtn.textContent = '🧮';
+  calcBtn.innerHTML = `
+    <span class="i-plus">+</span><span class="i-minus">−</span>
+    <span class="i-eq">=</span><span class="i-times">×</span>
+  `;
   calcBtn.setAttribute('aria-label', 'Abrir calculadora');
   calcBtn.title = 'Calculadora';
 
@@ -147,7 +163,7 @@
       <strong style="color:var(--texto-principal);">Calculadora</strong>
       <button type="button" id="cerrarCalcAral" style="border:none;background:none;font-size:1.2rem;cursor:pointer;color:var(--texto-secundario);">✕</button>
     </div>
-    <div id="displayCalcAral" class="aral-calc-display">0</div>
+    <div class="aral-calc-display"><span id="displayCalcAral">0</span><span id="opCalcAral" class="aral-calc-op-active"></span></div>
     <div class="aral-calc-grid">
       <button class="aral-calc-key op" data-action="clear">C</button>
       <button class="aral-calc-key op" data-action="back">⌫</button>
@@ -178,9 +194,15 @@
   let operador = null;
   let esperandoNuevo = false;
   const display = panel.querySelector('#displayCalcAral');
+  const opDisplay = panel.querySelector('#opCalcAral');
+
+  function simboloOperador(op) {
+    return ({'+': '+', '-': '−', '*': '×', '/': '÷'})[op] || '';
+  }
 
   function pintar() {
     display.textContent = actual;
+    opDisplay.textContent = operador ? simboloOperador(operador) : '';
   }
 
   function operar(a, b, op) {
