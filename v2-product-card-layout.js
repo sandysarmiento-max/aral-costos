@@ -18,12 +18,22 @@
     .producto-card h3 {
       grid-area:nombre;
       margin:0 0 1px !important;
+      font-weight:500 !important;
+      font-size:.9rem !important;
+      letter-spacing:-.1px;
     }
 
     .producto-card .producto-precio {
       grid-area:precio;
       margin:0 !important;
       align-self:center;
+      font-weight:650 !important;
+      color:#2F6F73 !important;
+      font-size:.96rem !important;
+    }
+
+    body[data-aral-style="neutral"] .producto-card .producto-precio {
+      color:#315B55 !important;
     }
 
     .producto-card .producto-actions {
@@ -38,6 +48,7 @@
     .producto-card .producto-meta {
       grid-area:meta;
       margin:1px 0 0 !important;
+      font-weight:400 !important;
     }
 
     .producto-card {
