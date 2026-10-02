@@ -164,11 +164,10 @@
       }
     });
 
-    // Los cargos que se agregan elevan lo que paga el cliente, pero luego salen de la venta.
-    // Los cargos que se descuentan reducen directamente el importe que queda para el negocio.
     const precioCliente = precioBase + totalSumado;
     const netoDespuesDeCargos = precioCliente - totalSumado - totalDescontado;
     const gananciaReal = netoDespuesDeCargos - costoTotal;
+    const diferenciaGanancia = gananciaReal - gananciaDeseada;
     const sym = simbolo();
 
     document.getElementById('precioFinal').innerText = `${sym} ${precioCliente.toFixed(2)}`;
@@ -177,10 +176,19 @@
       `• ${escapar(item.nombre)} (${item.tratamiento === 'sumar' ? 'agregado al precio' : 'descontado del precio'}): ${sym} ${item.importe.toFixed(2)}<br>`
     ).join('');
 
-    const bajaGanancia = gananciaReal < gananciaDeseada - 0.005;
-    const gananciaHtml = bajaGanancia
-      ? `<div style="margin-top:8px;padding:10px;border-radius:10px;background:#fff1e8;color:#8a4b2f;font-weight:700;line-height:1.35;">⚠ Tu ganancia real baja de ${sym} ${gananciaDeseada.toFixed(2)} a ${sym} ${gananciaReal.toFixed(2)}. Considera subir tu precio.</div>`
-      : `<div style="margin-top:8px;padding:10px;border-radius:10px;background:var(--acento-menta);color:var(--texto-menta);font-weight:700;">Ganancia real: ${sym} ${gananciaReal.toFixed(2)}</div>`;
+    const diferenciaTexto = Math.abs(diferenciaGanancia) < 0.005
+      ? `Sin diferencia respecto a la ganancia deseada.`
+      : diferenciaGanancia < 0
+        ? `Diferencia: ${sym} ${Math.abs(diferenciaGanancia).toFixed(2)} menos.`
+        : `Diferencia: ${sym} ${diferenciaGanancia.toFixed(2)} más.`;
+
+    const gananciaHtml = `
+      <div style="margin-top:8px;padding:10px;border-radius:10px;background:var(--bg-principal);border:1px solid var(--borde);color:var(--texto-principal);line-height:1.45;">
+        <div><b>Ganancia deseada:</b> ${sym} ${gananciaDeseada.toFixed(2)}</div>
+        <div><b>Ganancia real después del cargo:</b> ${sym} ${gananciaReal.toFixed(2)}</div>
+        <div style="margin-top:3px;color:var(--texto-secundario);font-size:.84rem;">${diferenciaTexto}</div>
+      </div>
+    `;
 
     document.getElementById('desgloseCostos').innerHTML = `
       • Materiales: ${sym} ${materiales.toFixed(2)}<br>
@@ -188,7 +196,6 @@
       • Gastos operativos (${horas}h): ${sym} ${costoTaller.toFixed(2)}<br>
       • Empaque: ${sym} ${empaque.toFixed(2)}<br>
       • Costo total: ${sym} ${costoTotal.toFixed(2)}<br>
-      • Ganancia deseada: ${sym} ${gananciaDeseada.toFixed(2)}<br>
       ${lineasCargos}
       ${detalles.length ? `• Neto después de cargos: ${sym} ${netoDespuesDeCargos.toFixed(2)}<br>` : ''}
       ${gananciaHtml}
