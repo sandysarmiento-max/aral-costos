@@ -31,10 +31,12 @@
     .logo-text {
       font-size:1.2rem;
       letter-spacing:-.5px;
+      font-weight:650;
     }
     .tagline {
       font-size:.68rem;
       margin-top:1px;
+      font-weight:400;
     }
 
     main {
@@ -50,15 +52,15 @@
     }
 
     .section-title {
-      font-size:.98rem;
-      font-weight:700;
+      font-size:.94rem;
+      font-weight:600;
       margin-bottom:10px;
-      letter-spacing:-.15px;
+      letter-spacing:-.1px;
     }
 
     label {
-      font-size:.75rem;
-      font-weight:600;
+      font-size:.74rem;
+      font-weight:500;
       margin-bottom:4px;
     }
 
@@ -66,7 +68,8 @@
       min-height:36px;
       padding:7px 10px;
       border-radius:9px;
-      font-size:.86rem;
+      font-size:.84rem;
+      font-weight:400;
       border-color:var(--borde);
     }
 
@@ -77,8 +80,8 @@
       min-height:40px;
       padding:9px 12px;
       border-radius:10px;
-      font-size:.88rem;
-      font-weight:700;
+      font-size:.85rem;
+      font-weight:600;
       box-shadow:none;
     }
 
@@ -87,17 +90,22 @@
     }
 
     .backup-note {
-      font-size:.75rem;
+      font-size:.74rem;
       line-height:1.35;
       margin-bottom:9px;
+      font-weight:400;
     }
 
     .bottom-nav {
       height:64px;
     }
     .nav-item {
-      font-size:.67rem;
+      font-size:.66rem;
+      font-weight:400;
       gap:1px;
+    }
+    .nav-item.active {
+      font-weight:600;
     }
     .nav-item span {
       font-size:1.05rem;
@@ -109,13 +117,15 @@
       border-radius:11px;
     }
     .result-box .price {
-      font-size:1.55rem;
-      letter-spacing:-.4px;
+      font-size:1.5rem;
+      font-weight:700;
+      letter-spacing:-.35px;
     }
     .desglose-texto {
-      font-size:.75rem;
+      font-size:.74rem;
       line-height:1.45;
       margin-top:8px;
+      font-weight:400;
     }
 
     /* Materiales: tabla compacta estilo app nativa */
@@ -135,26 +145,26 @@
       background:var(--bg-principal);
       border-bottom:1px solid var(--borde);
       color:var(--texto-secundario);
-      font-size:.65rem;
-      font-weight:700;
+      font-size:.63rem;
+      font-weight:600;
       text-transform:uppercase;
-      letter-spacing:.25px;
+      letter-spacing:.22px;
     }
     .mat-row {
       display:grid;
       grid-template-columns:minmax(0,1fr) 82px 62px 26px;
       gap:6px;
       align-items:center;
-      min-height:52px;
-      padding:7px 8px;
+      min-height:50px;
+      padding:6px 8px;
       border-bottom:1px solid var(--borde);
       background:var(--bg-tarjeta);
     }
     .mat-row:last-child { border-bottom:none; }
     .mat-name {
       min-width:0;
-      font-size:.79rem;
-      font-weight:650;
+      font-size:.77rem;
+      font-weight:500;
       line-height:1.18;
       color:var(--texto-principal);
       overflow:hidden;
@@ -162,9 +172,9 @@
     }
     .mat-unit-cost {
       margin-top:3px;
-      font-size:.64rem;
+      font-size:.62rem;
       color:var(--texto-secundario);
-      font-weight:500;
+      font-weight:400;
       white-space:nowrap;
       overflow:hidden;
       text-overflow:ellipsis;
@@ -182,12 +192,14 @@
       height:30px;
       padding:3px 5px !important;
       border-radius:7px !important;
-      font-size:.75rem !important;
+      font-size:.74rem !important;
+      font-weight:400 !important;
       text-align:right;
       background:var(--bg-principal);
     }
     .mat-qty span {
-      font-size:.67rem;
+      font-size:.65rem;
+      font-weight:400;
       color:var(--texto-secundario);
       white-space:nowrap;
       max-width:28px;
@@ -196,8 +208,8 @@
     }
     .mat-cost {
       text-align:right;
-      font-size:.79rem;
-      font-weight:800;
+      font-size:.77rem;
+      font-weight:650;
       white-space:nowrap;
     }
     .mat-delete {
@@ -213,7 +225,8 @@
     }
     .mat-empty {
       padding:14px 10px;
-      font-size:.76rem;
+      font-size:.74rem;
+      font-weight:400;
       color:var(--texto-secundario);
       text-align:center;
     }
@@ -224,7 +237,8 @@
       margin-bottom:10px;
     }
     #tab-costear .card:first-child label {
-      font-size:.72rem;
+      font-size:.71rem;
+      font-weight:500;
     }
     #tab-costear .card:first-child select {
       min-height:34px;
@@ -235,6 +249,15 @@
     #listaGastosMensuales .dynamic-row {
       margin:6px 0;
       gap:6px;
+    }
+
+    /* Despensa: menos peso visual */
+    #listaDespensaGlobal .item-row b {
+      font-weight:600;
+    }
+    #listaDespensaGlobal .item-row small {
+      font-weight:400;
+      font-size:.7rem;
     }
 
     @media (max-width:380px) {
