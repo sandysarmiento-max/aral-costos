@@ -121,6 +121,10 @@
   `;
   document.head.appendChild(style);
 
+  const materialesTitle = Array.from(document.querySelectorAll('.section-title'))
+    .find(el => el.textContent.includes('Materiales Seleccionados'));
+  if (materialesTitle) materialesTitle.textContent = 'Materiales Seleccionados';
+
   function aplicarEstilo(nombre) {
     const estilo = nombre === 'neutral' ? 'neutral' : 'soft';
     body.removeAttribute('data-theme');
