@@ -2,8 +2,9 @@
 // Cargar después de v2-products.js.
 
 (function () {
-  const materialesCard = document.getElementById('listaMaterialesProducto')?.closest('.card');
-  if (!materialesCard) return;
+  const lista = document.getElementById('listaMaterialesProducto');
+  const materialesCard = lista?.closest('.card');
+  if (!materialesCard || !lista) return;
 
   const style = document.createElement('style');
   style.textContent = `
@@ -26,20 +27,35 @@
       background:var(--bg-principal);
       color:var(--texto-principal);
     }
+    #listaMaterialesProducto.materiales-vacio {
+      display:none !important;
+      border:none !important;
+      margin:0 !important;
+    }
   `;
   document.head.appendChild(style);
 
+  const titulo = materialesCard.querySelector('.section-title');
+  if (titulo) titulo.textContent = 'Elegir material de despensa';
+
   const botonAgregar = Array.from(materialesCard.querySelectorAll('button'))
     .find(btn => btn.textContent.includes('Agregar material') || btn.textContent.includes('Traer de mi Despensa'));
-  const lista = document.getElementById('listaMaterialesProducto');
 
   const wrap = document.createElement('div');
   wrap.className = 'limpiar-proyecto-wrap';
   wrap.innerHTML = '<button type="button" class="btn-limpiar-proyecto" id="btnLimpiarProyecto">Limpiar proyecto</button>';
 
   if (botonAgregar) materialesCard.insertBefore(wrap, botonAgregar);
-  else if (lista) materialesCard.insertBefore(wrap, lista);
-  else materialesCard.appendChild(wrap);
+  else materialesCard.insertBefore(wrap, lista);
+
+  function actualizarEstadoLista() {
+    const sinMateriales = !Array.isArray(materialesDelProductoActual) || materialesDelProductoActual.length === 0;
+    lista.classList.toggle('materiales-vacio', sinMateriales);
+    if (sinMateriales) lista.innerHTML = '';
+  }
+
+  const observer = new MutationObserver(actualizarEstadoLista);
+  observer.observe(lista, { childList:true, subtree:true });
 
   function limpiarCalculoActual() {
     if (Array.isArray(materialesDelProductoActual)) {
@@ -55,6 +71,7 @@
     if (btnSalirEdicion) btnSalirEdicion.click();
 
     if (typeof renderizarMaterialesProducto === 'function') renderizarMaterialesProducto();
+    actualizarEstadoLista();
     if (typeof renderizarEmpaques === 'function') renderizarEmpaques();
     if (typeof calcularPrecio === 'function') calcularPrecio();
     if (typeof guardarDatosLocales === 'function') guardarDatosLocales();
@@ -66,4 +83,5 @@
   }
 
   document.getElementById('btnLimpiarProyecto').addEventListener('click', limpiarCalculoActual);
+  actualizarEstadoLista();
 })();
