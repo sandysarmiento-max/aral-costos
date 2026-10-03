@@ -13,6 +13,17 @@
   const metaApple = document.querySelector('meta[name="apple-mobile-web-app-title"]');
   if (metaApple) metaApple.setAttribute('content', NOMBRE_APP);
 
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', '#1F4E4E');
+
+  // Usa el nuevo símbolo de Costalia también como favicon sin tocar index.html.
+  document.querySelectorAll('link[rel="icon"]').forEach(el => el.remove());
+  const favicon = document.createElement('link');
+  favicon.rel = 'icon';
+  favicon.type = 'image/svg+xml';
+  favicon.href = './costalia-icon.svg';
+  document.head.appendChild(favicon);
+
   const logo = document.querySelector('.logo-text');
   if (logo) logo.textContent = NOMBRE_APP;
 
