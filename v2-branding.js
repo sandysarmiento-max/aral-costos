@@ -14,13 +14,72 @@
   if (metaApple) metaApple.setAttribute('content', NOMBRE_APP);
 
   const logo = document.querySelector('.logo-text');
-  if (logo) {
-    logo.textContent = NOMBRE_APP;
-  }
+  if (logo) logo.textContent = NOMBRE_APP;
 
   const tagline = document.querySelector('.tagline');
-  if (tagline) {
-    tagline.textContent = SUBTITULO;
+  if (tagline) tagline.textContent = SUBTITULO;
+
+  // Marca visual en el encabezado: símbolo con mayor protagonismo y texto compacto.
+  const headerLeft = document.querySelector('.header-left');
+  if (headerLeft && logo && tagline && !headerLeft.querySelector('.costalia-brand-mark')) {
+    const style = document.createElement('style');
+    style.textContent = `
+      .header-left.costalia-brand {
+        flex-direction:row;
+        align-items:center;
+        gap:8px;
+      }
+      .costalia-brand-mark {
+        width:34px;
+        height:34px;
+        flex:0 0 34px;
+        display:block;
+      }
+      .costalia-brand-copy {
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        min-width:0;
+        line-height:1;
+      }
+      .costalia-brand .logo-text {
+        font-size:1.05rem !important;
+        font-weight:600 !important;
+        letter-spacing:-.25px !important;
+        color:#1F4E4E !important;
+      }
+      .costalia-brand .tagline {
+        font-size:.62rem !important;
+        font-weight:400 !important;
+        margin-top:3px !important;
+        color:var(--texto-secundario) !important;
+        white-space:nowrap;
+      }
+      @media (max-width:360px) {
+        .costalia-brand-mark {
+          width:31px;
+          height:31px;
+          flex-basis:31px;
+        }
+        .costalia-brand .tagline { font-size:.59rem !important; }
+      }
+    `;
+    document.head.appendChild(style);
+
+    const mark = document.createElement('img');
+    mark.className = 'costalia-brand-mark';
+    mark.src = './costalia-mark.svg';
+    mark.alt = '';
+    mark.setAttribute('aria-hidden', 'true');
+
+    const copy = document.createElement('div');
+    copy.className = 'costalia-brand-copy';
+
+    headerLeft.classList.add('costalia-brand');
+    headerLeft.insertBefore(mark, headerLeft.firstChild);
+    copy.appendChild(logo);
+    copy.appendChild(tagline);
+    headerLeft.appendChild(copy);
   }
 
   document.querySelectorAll('.section-title').forEach(el => {
