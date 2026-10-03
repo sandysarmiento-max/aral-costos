@@ -2,23 +2,23 @@
 // Cargar después de v2-products.js.
 
 (function () {
-  const resultadoCard = document.getElementById('precioFinal')?.closest('.card');
-  if (!resultadoCard) return;
+  const materialesCard = document.getElementById('listaMaterialesProducto')?.closest('.card');
+  if (!materialesCard) return;
 
   const style = document.createElement('style');
   style.textContent = `
     .limpiar-proyecto-wrap {
-      margin-top:8px;
+      margin:0 0 8px;
       display:flex;
-      justify-content:center;
+      justify-content:flex-end;
     }
     .btn-limpiar-proyecto {
       border:none;
       background:transparent;
       color:var(--texto-secundario);
-      font-size:.76rem;
+      font-size:.74rem;
       font-weight:500;
-      padding:7px 10px;
+      padding:5px 8px;
       cursor:pointer;
       border-radius:8px;
     }
@@ -29,13 +29,17 @@
   `;
   document.head.appendChild(style);
 
-  const saveWrap = resultadoCard.querySelector('.producto-save-wrap');
-  if (!saveWrap) return;
+  const botonAgregar = Array.from(materialesCard.querySelectorAll('button'))
+    .find(btn => btn.textContent.includes('Agregar material') || btn.textContent.includes('Traer de mi Despensa'));
+  const lista = document.getElementById('listaMaterialesProducto');
 
   const wrap = document.createElement('div');
   wrap.className = 'limpiar-proyecto-wrap';
   wrap.innerHTML = '<button type="button" class="btn-limpiar-proyecto" id="btnLimpiarProyecto">Limpiar proyecto</button>';
-  saveWrap.appendChild(wrap);
+
+  if (botonAgregar) materialesCard.insertBefore(wrap, botonAgregar);
+  else if (lista) materialesCard.insertBefore(wrap, lista);
+  else materialesCard.appendChild(wrap);
 
   function limpiarCalculoActual() {
     if (Array.isArray(materialesDelProductoActual)) {
