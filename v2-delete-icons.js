@@ -5,7 +5,10 @@
   const style = document.createElement('style');
   style.textContent = `
     .despensa-actions-v2 .btn-delete,
-    .mat-delete {
+    .mat-delete,
+    #listaCargosVenta .btn-delete,
+    #listaEmpaques .btn-delete,
+    #listaGastosMensuales .btn-delete {
       font-size:.78rem !important;
       line-height:1 !important;
       color:#D35A63 !important;
@@ -68,11 +71,14 @@
   document.head.appendChild(style);
 
   function aplicarPapeleras(root = document) {
-    root.querySelectorAll('.despensa-actions-v2 .btn-delete, .mat-delete').forEach(btn => {
+    root.querySelectorAll(
+      '.despensa-actions-v2 .btn-delete, .mat-delete, #listaCargosVenta .btn-delete, #listaEmpaques .btn-delete, #listaGastosMensuales .btn-delete'
+    ).forEach(btn => {
       if (btn.textContent.trim() !== '🗑️') {
         btn.textContent = '🗑️';
       }
       btn.title = 'Eliminar';
+      btn.setAttribute('aria-label', btn.getAttribute('aria-label') || 'Eliminar');
     });
   }
 
