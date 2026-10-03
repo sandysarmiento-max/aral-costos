@@ -1,24 +1,30 @@
 {
-  "name": "Aral Costos",
-  "short_name": "Aral Costos",
-  "description": "Calculadora de costos de Aral",
+  "name": "Costalia",
+  "short_name": "Costalia",
+  "description": "Costos y precios para tu negocio",
   "start_url": "/aral-costos/",
   "scope": "/aral-costos/",
   "display": "standalone",
   "background_color": "#F7F2ED",
-  "theme_color": "#EFC2B8",
+  "theme_color": "#1F4E4E",
   "icons": [
+    {
+      "src": "costalia-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
       "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }
