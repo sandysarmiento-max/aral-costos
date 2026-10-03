@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Costalia</title>
+  <desc id="desc">Gráfico ascendente de tres barras con hoja</desc>
+  <rect width="512" height="512" rx="112" fill="#F7F2ED"/>
+  <g transform="translate(74 72)">
+    <rect x="34" y="178" width="78" height="122" rx="22" fill="#F4A78E"/>
+    <rect x="142" y="116" width="78" height="184" rx="22" fill="#7FA793"/>
+    <rect x="250" y="54" width="78" height="246" rx="22" fill="#1F4E4E"/>
+    <path d="M266 34c38-36 82-43 108-36-5 38-26 77-79 89-18 4-34 3-45 0 1-18 5-37 16-53Z" fill="#7FA793"/>
+    <rect x="16" y="326" width="332" height="12" rx="6" fill="#9DB9AA"/>
+  </g>
+</svg>
