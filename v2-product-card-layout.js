@@ -4,13 +4,13 @@
   style.textContent = `
     .producto-card > div:last-child {
       display:grid;
-      grid-template-columns:minmax(0,1fr) auto;
+      grid-template-columns:minmax(0,1fr);
       grid-template-areas:
-        "nombre nombre"
-        "precio acciones"
-        "meta meta";
-      column-gap:8px;
-      row-gap:2px;
+        "nombre"
+        "precio"
+        "meta"
+        "acciones";
+      row-gap:3px;
       align-items:center;
       min-width:0;
     }
@@ -38,11 +38,10 @@
 
     .producto-card .producto-actions {
       grid-area:acciones;
-      margin:0 !important;
-      justify-self:end;
-      align-self:center;
+      margin:4px 0 0 !important;
       display:flex;
-      gap:3px;
+      gap:5px;
+      flex-wrap:wrap;
     }
 
     .producto-card .producto-meta {
@@ -64,10 +63,25 @@
     }
 
     .producto-actions button {
-      width:28px !important;
-      height:28px !important;
+      width:auto !important;
+      min-width:0 !important;
+      height:30px !important;
+      padding:0 7px !important;
       border-radius:7px !important;
-      font-size:.82rem !important;
+      font-size:.68rem !important;
+      display:inline-flex !important;
+      align-items:center;
+      justify-content:center;
+      gap:3px;
+      white-space:nowrap;
+      font-weight:500;
+    }
+
+    @media (max-width:380px) {
+      .producto-actions button {
+        padding:0 6px !important;
+        font-size:.65rem !important;
+      }
     }
   `;
   document.head.appendChild(style);
