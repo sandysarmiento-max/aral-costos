@@ -169,6 +169,7 @@
     if (cantidadEnCompra === null) return showToast('La unidad usada debe ser igual o convertible a la unidad de compra.');
 
     materialesDelProductoActual.push({
+      insumoId: String(item.id || ''),
       nombre: item.nombre,
       cantidadUsada: cant,
       unidadUsada: unidad,
