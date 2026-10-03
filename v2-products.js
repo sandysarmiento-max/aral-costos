@@ -1,4 +1,4 @@
-// Productos guardados para Aral Costos V2.
+// Productos guardados para Costalia.
 // Se carga después de v2-tools.js.
 
 (function () {
@@ -38,22 +38,32 @@
     return option?.dataset?.symbol || 'S/.';
   }
 
-  function insumoActualPorNombre(nombre) {
-    return Array.isArray(despensaGlobal)
-      ? despensaGlobal.find(x => String(x.nombre || '').trim().toLowerCase() === String(nombre || '').trim().toLowerCase())
-      : null;
+  function nombreClave(valor) {
+    return String(valor || '').trim().toLowerCase();
+  }
+
+  function insumoActual(material) {
+    if (!Array.isArray(despensaGlobal) || !material) return null;
+    const id = String(material.insumoId || '');
+    if (id) {
+      const porId = despensaGlobal.find(x => String(x.id || '') === id);
+      if (porId) return porId;
+    }
+    const clave = nombreClave(material.nombre);
+    return clave ? despensaGlobal.find(x => nombreClave(x.nombre) === clave) || null : null;
   }
 
   function materialParaGuardar(item) {
+    const insumo = insumoActual(item);
     const copia = {
-      nombre: String(item.nombre || '').trim(),
+      insumoId: String(insumo?.id || item.insumoId || ''),
+      nombre: String(insumo?.nombre || item.nombre || '').trim(),
       cantidadUsada: numero(item.cantidadUsada, 0),
       unidadUsada: String(item.unidadUsada || 'unidad'),
       costoFinalCalculado: numero(item.costoFinalCalculado, 0),
       cantidadCompraEquivalente: null
     };
 
-    const insumo = insumoActualPorNombre(copia.nombre);
     const costoPorUnidadCompra = insumo && numero(insumo.cantidadPaquete, 0) > 0
       ? numero(insumo.costoPaquete, 0) / numero(insumo.cantidadPaquete, 1)
       : 0;
@@ -66,8 +76,12 @@
 
   function materialConCostoActual(item) {
     const copia = clonar(item);
-    const insumo = insumoActualPorNombre(copia.nombre);
+    const insumo = insumoActual(copia);
     const equivalente = numero(copia.cantidadCompraEquivalente, NaN);
+    if (insumo) {
+      copia.insumoId = String(insumo.id || copia.insumoId || '');
+      copia.nombre = String(insumo.nombre || copia.nombre || '').trim();
+    }
     if (insumo && Number.isFinite(equivalente) && equivalente >= 0 && numero(insumo.cantidadPaquete, 0) > 0) {
       const costoUnidadCompra = numero(insumo.costoPaquete, 0) / numero(insumo.cantidadPaquete, 1);
       copia.costoFinalCalculado = costoUnidadCompra * equivalente;
@@ -83,13 +97,22 @@
       id: String(item.id || idNuevo()),
       nombre,
       foto: typeof item.foto === 'string' ? item.foto : '',
-      materiales: Array.isArray(item.materiales) ? item.materiales.map(x => ({
-        nombre: String(x.nombre || '').trim(),
-        cantidadUsada: numero(x.cantidadUsada, 0),
-        unidadUsada: String(x.unidadUsada || 'unidad'),
-        costoFinalCalculado: numero(x.costoFinalCalculado, 0),
-        cantidadCompraEquivalente: Number.isFinite(Number(x.cantidadCompraEquivalente)) ? Number(x.cantidadCompraEquivalente) : null
-      })).filter(x => x.nombre) : [],
+      materiales: Array.isArray(item.materiales) ? item.materiales.map(x => {
+        const base = {
+          insumoId: String(x.insumoId || ''),
+          nombre: String(x.nombre || '').trim(),
+          cantidadUsada: numero(x.cantidadUsada, 0),
+          unidadUsada: String(x.unidadUsada || 'unidad'),
+          costoFinalCalculado: numero(x.costoFinalCalculado, 0),
+          cantidadCompraEquivalente: Number.isFinite(Number(x.cantidadCompraEquivalente)) ? Number(x.cantidadCompraEquivalente) : null
+        };
+        const insumo = insumoActual(base);
+        if (insumo) {
+          base.insumoId = String(insumo.id || '');
+          base.nombre = String(insumo.nombre || base.nombre).trim();
+        }
+        return base;
+      }).filter(x => x.nombre) : [],
       empaques: Array.isArray(item.empaques) ? item.empaques.map(x => ({ nombre: String(x.nombre || ''), monto: Math.max(numero(x.monto, 0), 0) })) : [],
       formulario: item.formulario && typeof item.formulario === 'object' ? clonar(item.formulario) : {},
       currencyIndex: numero(item.currencyIndex, 0),
