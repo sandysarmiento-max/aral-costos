@@ -344,6 +344,164 @@
   `;
   phone.appendChild(modalEliminar);
 
+
+  const modalEditor = document.createElement('div');
+  modalEditor.className = 'modal';
+  modalEditor.id = 'modalEditarProducto';
+  modalEditor.innerHTML = `
+    <div class="modal-content" style="max-width:380px;max-height:88%;overflow:auto;">
+      <div class="section-title">Editar producto</div>
+      <div id="editorProductoContenido"></div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button type="button" class="btn-main btn-secondary" id="cancelarEditarProducto">Cancelar</button>
+        <button type="button" class="btn-main" id="guardarEditarProducto">Guardar cambios</button>
+      </div>
+    </div>
+  `;
+  phone.appendChild(modalEditor);
+
+
+  function abrirEditorProducto(prod) {
+    if (!prod) return;
+    productoEnEdicionId = prod.id;
+
+    const resumen = calcularResumenProducto(prod);
+    const cont = document.getElementById('editorProductoContenido');
+    if (!cont) return;
+
+    const materialesHtml = resumen.materialesActuales.map((m, i) => `
+      <div class="input-group" data-editor-material="${i}">
+        <label>${escapar(m.nombre)}</label>
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;">
+          <input type="number" step="any" min="0" data-field="cantidad" data-index="${i}" value="${numero(m.cantidadUsada,0)}" aria-label="Cantidad usada de ${escapar(m.nombre)}">
+          <input type="text" value="${escapar(String(m.unidadUsada || 'unidad'))}" disabled aria-label="Unidad">
+        </div>
+      </div>
+    `).join('') || '<div class="backup-note">Este producto no tiene materiales guardados.</div>';
+
+    const empaquesHtml = prod.empaques.map((e, i) => `
+      <div class="input-group" data-editor-empaque="${i}">
+        <label>${escapar(e.nombre || 'Empaque')}</label>
+        <input type="number" step="any" min="0" data-field="empaque" data-index="${i}" value="${numero(e.monto,0)}">
+      </div>
+    `).join('');
+
+    cont.innerHTML = `
+      <div class="input-group">
+        <label>Nombre del producto</label>
+        <input id="editorProductoNombre" type="text" maxlength="80" value="${escapar(prod.nombre)}">
+      </div>
+
+      <div class="input-group">
+        <label>Tiempo dedicado (horas)</label>
+        <input id="editorProductoHoras" type="number" min="0" step="0.5" value="${numero(prod.formulario?.horas,0)}">
+      </div>
+
+      <div class="input-group">
+        <label>Costo por hora</label>
+        <input id="editorProductoValorHora" type="number" min="0" step="any" value="${numero(prod.formulario?.valorHora,0)}">
+      </div>
+
+      <div class="input-group">
+        <label>Modo de ganancia</label>
+        <select id="editorProductoModoGanancia">
+          <option value="porcentaje" ${prod.formulario?.modoGanancia === 'fijo' ? '' : 'selected'}>Porcentaje</option>
+          <option value="fijo" ${prod.formulario?.modoGanancia === 'fijo' ? 'selected' : ''}>Monto fijo</option>
+        </select>
+      </div>
+
+      <div class="input-group" id="editorPorcentajeWrap">
+        <label>Ganancia (%)</label>
+        <input id="editorProductoMargen" type="number" min="0" step="any" value="${numero(prod.formulario?.margen,0)}">
+      </div>
+
+      <div class="input-group" id="editorFijoWrap">
+        <label>Ganancia fija</label>
+        <input id="editorProductoGananciaFija" type="number" min="0" step="any" value="${numero(prod.formulario?.gananciaFija,0)}">
+      </div>
+
+      <div class="section-title" style="font-size:.92rem;margin-top:10px;">Materiales</div>
+      ${materialesHtml}
+
+      ${empaquesHtml ? `<div class="section-title" style="font-size:.92rem;margin-top:10px;">Empaques</div>${empaquesHtml}` : ''}
+    `;
+
+    const modo = document.getElementById('editorProductoModoGanancia');
+    const refrescarModoEditor = () => {
+      const fijo = modo?.value === 'fijo';
+      const p = document.getElementById('editorPorcentajeWrap');
+      const f = document.getElementById('editorFijoWrap');
+      if (p) p.style.display = fijo ? 'none' : '';
+      if (f) f.style.display = fijo ? '' : 'none';
+    };
+    modo?.addEventListener('change', refrescarModoEditor);
+    refrescarModoEditor();
+
+    modalEditor.style.display = 'flex';
+  }
+
+  function cerrarEditorProducto() {
+    modalEditor.style.display = 'none';
+    productoEnEdicionId = null;
+  }
+
+  function guardarEditorProducto() {
+    const prod = productos.find(x => x.id === productoEnEdicionId);
+    if (!prod) return cerrarEditorProducto();
+
+    const nombre = String(document.getElementById('editorProductoNombre')?.value || '').trim();
+    if (!nombre) return showToast('Escribe un nombre para el producto.');
+
+    const resumen = calcularResumenProducto(prod);
+    const materialesActuales = resumen.materialesActuales;
+
+    prod.nombre = nombre;
+    prod.formulario = {
+      ...prod.formulario,
+      horas: String(Math.max(numero(document.getElementById('editorProductoHoras')?.value, 0), 0)),
+      valorHora: String(Math.max(numero(document.getElementById('editorProductoValorHora')?.value, 0), 0)),
+      modoGanancia: document.getElementById('editorProductoModoGanancia')?.value === 'fijo' ? 'fijo' : 'porcentaje',
+      margen: String(Math.max(numero(document.getElementById('editorProductoMargen')?.value, 0), 0)),
+      gananciaFija: String(Math.max(numero(document.getElementById('editorProductoGananciaFija')?.value, 0), 0))
+    };
+
+    prod.materiales = prod.materiales.map((m, i) => {
+      const copia = clonar(m);
+      const input = modalEditor.querySelector(`[data-field="cantidad"][data-index="${i}"]`);
+      const nuevaCantidad = Math.max(numero(input?.value, numero(copia.cantidadUsada, 0)), 0);
+      const insumo = insumoActual(copia);
+      copia.cantidadUsada = nuevaCantidad;
+      if (insumo) {
+        copia.insumoId = String(insumo.id || copia.insumoId || '');
+        copia.nombre = String(insumo.nombre || copia.nombre || '').trim();
+        const equivalenteActual = numero(copia.cantidadCompraEquivalente, NaN);
+        if (Number.isFinite(equivalenteActual) && numero(m.cantidadUsada,0) > 0) {
+          const factor = nuevaCantidad / numero(m.cantidadUsada,1);
+          copia.cantidadCompraEquivalente = equivalenteActual * factor;
+          copia.costoFinalCalculado = (numero(insumo.costoPaquete,0) / Math.max(numero(insumo.cantidadPaquete,1),1)) * copia.cantidadCompraEquivalente;
+        }
+      }
+      return copia;
+    });
+
+    prod.empaques = prod.empaques.map((e, i) => ({
+      ...e,
+      monto: Math.max(numero(modalEditor.querySelector(`[data-field="empaque"][data-index="${i}"]`)?.value, e.monto), 0)
+    }));
+
+    prod.actualizadoEn = new Date().toISOString();
+    guardarDatosLocales();
+    renderizarProductos();
+    cerrarEditorProducto();
+    showToast('Producto actualizado.');
+  }
+
+  document.getElementById('cancelarEditarProducto').addEventListener('click', cerrarEditorProducto);
+  document.getElementById('guardarEditarProducto').addEventListener('click', guardarEditorProducto);
+  modalEditor.addEventListener('click', event => {
+    if (event.target === modalEditor) cerrarEditorProducto();
+  });
+
   function actualizarEstadoEdicion() {
     const banner = document.getElementById('productoEditBanner');
     const texto = document.getElementById('productoEditTexto');
@@ -471,7 +629,7 @@
       showToast('No se encontró el producto guardado.', 'error');
       return;
     }
-    cargarProductoEnCostear(prod);
+    abrirEditorProducto(prod);
   };
 
   function comprimirImagen(archivo) {
