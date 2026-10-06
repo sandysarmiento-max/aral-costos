@@ -187,12 +187,31 @@
   btnMas.textContent = '+';
 
   if (sliderHoras) {
+    const legacyHorasLabel = sliderHoras.querySelector('#horasLabel');
     sliderHoras.parentElement.insertBefore(stepper, sliderHoras);
     stepper.append(btnMenos, horas, btnMas);
+
+    // Mantener este nodo porque el código base lo usa al restaurar respaldos.
+    if (legacyHorasLabel) {
+      legacyHorasLabel.style.display = 'none';
+      grupoHoras.appendChild(legacyHorasLabel);
+    } else if (!document.getElementById('horasLabel')) {
+      const hidden = document.createElement('span');
+      hidden.id = 'horasLabel';
+      hidden.style.display = 'none';
+      grupoHoras.appendChild(hidden);
+    }
+
     sliderHoras.remove();
   } else {
     grupoHoras.appendChild(stepper);
     stepper.append(btnMenos, horas, btnMas);
+    if (!document.getElementById('horasLabel')) {
+      const hidden = document.createElement('span');
+      hidden.id = 'horasLabel';
+      hidden.style.display = 'none';
+      grupoHoras.appendChild(hidden);
+    }
   }
 
   function normalizarHoras(valor) {
@@ -280,12 +299,31 @@
   percentSymbol.setAttribute('aria-hidden', 'true');
 
   if (sliderMargen) {
+    const legacyMargenLabel = sliderMargen.querySelector('#margenLabel');
     sliderMargen.parentElement.insertBefore(percentWrap, sliderMargen);
     percentWrap.append(margen, percentSymbol);
+
+    // Mantener este nodo porque el código base lo usa al restaurar respaldos.
+    if (legacyMargenLabel) {
+      legacyMargenLabel.style.display = 'none';
+      grupoMargen.appendChild(legacyMargenLabel);
+    } else if (!document.getElementById('margenLabel')) {
+      const hidden = document.createElement('span');
+      hidden.id = 'margenLabel';
+      hidden.style.display = 'none';
+      grupoMargen.appendChild(hidden);
+    }
+
     sliderMargen.remove();
   } else {
     grupoMargen.appendChild(percentWrap);
     percentWrap.append(margen, percentSymbol);
+    if (!document.getElementById('margenLabel')) {
+      const hidden = document.createElement('span');
+      hidden.id = 'margenLabel';
+      hidden.style.display = 'none';
+      grupoMargen.appendChild(hidden);
+    }
   }
 
   const etiquetaMargen = grupoMargen.querySelector('label');
