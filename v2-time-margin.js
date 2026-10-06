@@ -292,8 +292,22 @@
   if (etiquetaMargen) etiquetaMargen.textContent = 'Ganancia';
 
   margen.addEventListener('input', () => {
-    if (typeof updateMargenLabel === 'function') updateMargenLabel(margen.value);
-    else if (typeof calcularPrecio === 'function') calcularPrecio();
+    if (typeof globalThis.calcularPrecio === 'function') {
+      globalThis.calcularPrecio();
+    } else if (typeof calcularPrecio === 'function') {
+      calcularPrecio();
+    }
+    if (typeof globalThis.guardarDatosLocales === 'function') {
+      globalThis.guardarDatosLocales();
+    }
+  });
+
+  margen.addEventListener('change', () => {
+    if (typeof globalThis.calcularPrecio === 'function') {
+      globalThis.calcularPrecio();
+    } else if (typeof calcularPrecio === 'function') {
+      calcularPrecio();
+    }
   });
 
   // Compactar Tiempo + Costo por hora en una misma fila.
