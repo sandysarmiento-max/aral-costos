@@ -214,6 +214,7 @@
 
     const anterior = despensaGlobal[indiceEdicion];
     const nombreAnterior = String(anterior.nombre || '').trim();
+    const insumoId = String(anterior.id || '');
 
     despensaGlobal[indiceEdicion] = {
       ...anterior,
@@ -224,11 +225,24 @@
       costoUnitario: nuevoCosto / nuevaCantidad
     };
 
-    if (nombreAnterior && nombreAnterior !== nuevoNombre && Array.isArray(materialesDelProductoActual)) {
+    if (Array.isArray(materialesDelProductoActual)) {
       materialesDelProductoActual.forEach(item => {
-        if (String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase()) {
+        const coincidePorId = insumoId && String(item.insumoId || '') === insumoId;
+        const coincidePorNombre = !item.insumoId && nombreAnterior &&
+          String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase();
+
+        if (coincidePorId || coincidePorNombre) {
+          if (insumoId) item.insumoId = insumoId;
           item.nombre = nuevoNombre;
         }
+      });
+    }
+
+    if (nombreAnterior !== nuevoNombre && typeof window.costaliaActualizarInsumoEnProductos === 'function') {
+      window.costaliaActualizarInsumoEnProductos({
+        insumoId,
+        nombreAnterior,
+        nuevoNombre
       });
     }
 
