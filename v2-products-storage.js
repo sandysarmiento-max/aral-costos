@@ -53,6 +53,37 @@
     };
   }
 
+  function costoUnitarioCompra(item) {
+    const cantidad = numeroSeguro(item?.cantidadPaquete ?? item?.cantidadCompra, 0);
+    const costo = numeroSeguro(item?.costoPaquete ?? item?.costoCompra, 0);
+    return cantidad > 0 ? costo / cantidad : 0;
+  }
+
+  function inferirInsumoPorCosto(material, despensa) {
+    if (!material || !Array.isArray(despensa)) return null;
+    const equivalente = numeroSeguro(material.cantidadCompraEquivalente, 0);
+    const costoMaterial = numeroSeguro(material.costoFinalCalculado, 0);
+    if (equivalente <= 0 || costoMaterial <= 0) return null;
+
+    const costoEsperado = costoMaterial / equivalente;
+    const tolerancia = Math.max(0.000001, Math.abs(costoEsperado) * 0.0001);
+    const unidadMaterial = String(material.unidadUsada || '').trim().toLowerCase();
+
+    const candidatos = despensa.filter(item => {
+      const costoActual = costoUnitarioCompra(item);
+      if (Math.abs(costoActual - costoEsperado) > tolerancia) return false;
+
+      const unidadCompra = String(item.unidadCompra || '').replace(/^otro:/, '').trim().toLowerCase();
+      if (!unidadMaterial || !unidadCompra) return true;
+
+      // Solo usamos la unidad como refuerzo cuando coinciden de forma directa.
+      // Si no coincide, no descartamos porque puede haber conversiones válidas (cm/metro, g/kg, etc.).
+      return true;
+    });
+
+    return candidatos.length === 1 ? candidatos[0] : null;
+  }
+
   function buscarInsumoParaMaterial(material, despensa) {
     if (!material || !Array.isArray(despensa)) return null;
     const id = String(material.insumoId || '');
@@ -61,7 +92,13 @@
       if (porId) return porId;
     }
     const clave = nombreClave(material.nombre);
-    return clave ? despensa.find(item => nombreClave(item.nombre) === clave) || null : null;
+    const porNombre = clave ? despensa.find(item => nombreClave(item.nombre) === clave) || null : null;
+    if (porNombre) return porNombre;
+
+    // Productos de versiones anteriores pueden conservar un ID que ya no existe
+    // y un nombre anterior al renombrado. En ese caso intentamos reparar el vínculo
+    // solo cuando el costo unitario identifica de forma única a un insumo actual.
+    return inferirInsumoPorCosto(material, despensa);
   }
 
   if (typeof normalizarMateriales === 'function') {
@@ -92,6 +129,11 @@
         const id = asegurarIdInsumo(insumo);
         if (String(material.insumoId || '') !== id) {
           material.insumoId = id;
+          cambio = true;
+        }
+        const nombreActual = String(insumo.nombre || '').trim();
+        if (nombreActual && String(material.nombre || '').trim() !== nombreActual) {
+          material.nombre = nombreActual;
           cambio = true;
         }
       });
