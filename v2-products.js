@@ -42,6 +42,37 @@
     return String(valor || '').trim().toLowerCase();
   }
 
+
+  function textoUnidadProducto(unidad) {
+    const u = String(unidad || 'unidad');
+    return u.startsWith('otro:') ? u.slice(5) : u;
+  }
+
+  function unidadesCompatiblesProducto(unidadCompra) {
+    const compra = String(unidadCompra || 'unidad');
+    if (compra.startsWith('otro:')) return [compra];
+    if (compra === 'kg' || compra === 'g') return ['kg', 'g'];
+    if (compra === 'litro' || compra === 'ml') return ['litro', 'ml'];
+    if (compra === 'metro' || compra === 'cm') return ['metro', 'cm'];
+    if (compra === 'unidad') return ['unidad'];
+    if (compra === 'gota') return ['gota'];
+    return [compra];
+  }
+
+  function opcionesUnidadEditor(material, insumo) {
+    const actual = String(material?.unidadUsada || 'unidad');
+    const compatibles = unidadesCompatiblesProducto(insumo?.unidadCompra || actual);
+    const opciones = compatibles.includes(actual) ? compatibles : [actual, ...compatibles];
+    return opciones.map(u => `<option value="${escapar(u)}" ${u === actual ? 'selected' : ''}>${escapar(textoUnidadProducto(u))}</option>`).join('');
+  }
+
+  function cantidadConvertibleProducto(cantidad, unidadUsada, unidadCompra) {
+    if (typeof convertirCantidad === 'function') {
+      return convertirCantidad(cantidad, unidadUsada, unidadCompra);
+    }
+    return String(unidadUsada) === String(unidadCompra) ? cantidad : null;
+  }
+
   function insumoActual(material) {
     if (!Array.isArray(despensaGlobal) || !material) return null;
     const id = String(material.insumoId || '');
@@ -414,8 +445,18 @@
         <label>${escapar(m.nombre)}</label>
         <div style="display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;">
           <input type="number" step="any" min="0" data-field="cantidad" data-index="${i}" value="${numero(m.cantidadUsada,0)}" aria-label="Cantidad usada de ${escapar(m.nombre)}">
-          <input type="text" value="${escapar(String(m.unidadUsada || 'unidad'))}" disabled aria-label="Unidad">
+          <select data-field="unidad" data-index="${i}" aria-label="Unidad usada de ${escapar(m.nombre)}">
+            ${opcionesUnidadEditor(m, insumoActual(m))}
+          </select>
         </div>
+        ${(() => {
+          const insumo = insumoActual(m);
+          if (!insumo) return '';
+          const convertible = cantidadConvertibleProducto(numero(m.cantidadUsada,0), m.unidadUsada, insumo.unidadCompra);
+          return convertible === null
+            ? '<small style="display:block;margin-top:5px;color:#A64B4B;">La unidad de compra cambió en Almacén. Elige una unidad compatible y revisa la cantidad antes de guardar.</small>'
+            : '';
+        })()}
       </div>
     `).join('') || '<div class="backup-note">Este producto no tiene materiales guardados.</div>';
 
@@ -505,24 +546,34 @@
       gananciaFija: String(Math.max(numero(document.getElementById('editorProductoGananciaFija')?.value, 0), 0))
     };
 
-    prod.materiales = prod.materiales.map((m, i) => {
+    try {
+      prod.materiales = prod.materiales.map((m, i) => {
       const copia = clonar(m);
       const input = modalEditor.querySelector(`[data-field="cantidad"][data-index="${i}"]`);
+      const selectUnidad = modalEditor.querySelector(`[data-field="unidad"][data-index="${i}"]`);
       const nuevaCantidad = Math.max(numero(input?.value, numero(copia.cantidadUsada, 0)), 0);
+      const nuevaUnidad = String(selectUnidad?.value || copia.unidadUsada || 'unidad');
       const insumo = insumoActual(copia);
+
       copia.cantidadUsada = nuevaCantidad;
+      copia.unidadUsada = nuevaUnidad;
+
       if (insumo) {
+        const equivalente = cantidadConvertibleProducto(nuevaCantidad, nuevaUnidad, insumo.unidadCompra);
+        if (equivalente === null) {
+          throw new Error(`La unidad usada de "${copia.nombre}" no es compatible con la unidad de compra actual.`);
+        }
+
         copia.insumoId = String(insumo.id || copia.insumoId || '');
         copia.nombre = String(insumo.nombre || copia.nombre || '').trim();
-        const equivalenteActual = numero(copia.cantidadCompraEquivalente, NaN);
-        if (Number.isFinite(equivalenteActual) && numero(m.cantidadUsada,0) > 0) {
-          const factor = nuevaCantidad / numero(m.cantidadUsada,1);
-          copia.cantidadCompraEquivalente = equivalenteActual * factor;
-          copia.costoFinalCalculado = (numero(insumo.costoPaquete,0) / Math.max(numero(insumo.cantidadPaquete,1),1)) * copia.cantidadCompraEquivalente;
-        }
+        copia.cantidadCompraEquivalente = equivalente;
+        copia.costoFinalCalculado = (numero(insumo.costoPaquete,0) / Math.max(numero(insumo.cantidadPaquete,1),1)) * equivalente;
       }
-      return copia;
-    });
+        return copia;
+      });
+    } catch (error) {
+      return showToast(error?.message || 'Revisa la unidad y cantidad de los materiales.', 'error');
+    }
 
     prod.empaques = prod.empaques.map((e, i) => ({
       ...e,
