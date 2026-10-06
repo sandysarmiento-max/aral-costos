@@ -227,9 +227,13 @@
 
     if (Array.isArray(materialesDelProductoActual)) {
       materialesDelProductoActual.forEach(item => {
-        const coincidePorId = insumoId && String(item.insumoId || '') === insumoId;
-        const coincidePorNombre = !item.insumoId && nombreAnterior &&
-          String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase();
+        const materialId = String(item.insumoId || '');
+        const coincidePorId = insumoId && materialId === insumoId;
+        const idSigueExistiendo = materialId && Array.isArray(despensaGlobal) &&
+          despensaGlobal.some(insumo => String(insumo.id || '') === materialId);
+        const coincidePorNombre = nombreAnterior &&
+          String(item.nombre || '').trim().toLowerCase() === nombreAnterior.toLowerCase() &&
+          (!materialId || !idSigueExistiendo);
 
         if (coincidePorId || coincidePorNombre) {
           if (insumoId) item.insumoId = insumoId;
