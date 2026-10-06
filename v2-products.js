@@ -645,9 +645,13 @@
       if (!Array.isArray(producto?.materiales)) return;
 
       producto.materiales.forEach(material => {
-        const coincidePorId = insumoId && String(material.insumoId || '') === insumoId;
-        const coincidePorNombre = !material.insumoId && nombreAnterior &&
-          String(material.nombre || '').trim().toLowerCase() === nombreAnterior;
+        const materialId = String(material.insumoId || '');
+        const coincidePorId = insumoId && materialId === insumoId;
+        const idSigueExistiendo = materialId && Array.isArray(despensaGlobal) &&
+          despensaGlobal.some(item => String(item.id || '') === materialId);
+        const coincidePorNombre = nombreAnterior &&
+          String(material.nombre || '').trim().toLowerCase() === nombreAnterior &&
+          (!materialId || !idSigueExistiendo);
 
         if (!coincidePorId && !coincidePorNombre) return;
 
