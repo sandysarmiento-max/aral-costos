@@ -561,7 +561,9 @@
         let mat = 0; materialesDelProductoActual.forEach(i => mat += Number(i.costoFinalCalculado) || 0);
         const hrs = numeroSeguro(document.getElementById('horas').value);
         const vH = numeroSeguro(document.getElementById('valorHora').value);
-        const emp = numeroSeguro(document.getElementById('gastoEmpaque').value);
+        const emp = Array.isArray(empaquesProducto)
+            ? empaquesProducto.reduce((suma, item) => suma + numeroSeguro(item.monto, 0), 0)
+            : 0;
         const marg = numeroSeguro(document.getElementById('margen').value);
         const simbolo = document.getElementById('currency').options[document.getElementById('currency').selectedIndex].getAttribute('data-symbol');
 
