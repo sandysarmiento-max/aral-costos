@@ -89,30 +89,70 @@
     return copia;
   }
 
+  function consolidarMaterialesDuplicados(materiales) {
+    if (!Array.isArray(materiales)) return [];
+
+    const salida = [];
+    const indicePorClave = new Map();
+
+    materiales.forEach(material => {
+      if (!material || !material.nombre) return;
+
+      const id = String(material.insumoId || '');
+      const unidad = String(material.unidadUsada || 'unidad').trim().toLowerCase();
+      const clave = id ? `id:${id}|${unidad}` : '';
+
+      // Solo consolidamos automáticamente cuando existe un ID estable.
+      // Así evitamos unir por error dos insumos antiguos que solo tienen nombres parecidos.
+      if (!clave || !indicePorClave.has(clave)) {
+        indicePorClave.set(clave, salida.length);
+        salida.push(material);
+        return;
+      }
+
+      const existente = salida[indicePorClave.get(clave)];
+      existente.cantidadUsada = numero(existente.cantidadUsada, 0) + numero(material.cantidadUsada, 0);
+      existente.costoFinalCalculado = numero(existente.costoFinalCalculado, 0) + numero(material.costoFinalCalculado, 0);
+
+      const eqA = Number(existente.cantidadCompraEquivalente);
+      const eqB = Number(material.cantidadCompraEquivalente);
+      if (Number.isFinite(eqA) && Number.isFinite(eqB)) {
+        existente.cantidadCompraEquivalente = eqA + eqB;
+      } else if (Number.isFinite(eqB) && !Number.isFinite(eqA)) {
+        existente.cantidadCompraEquivalente = eqB;
+      }
+    });
+
+    return salida;
+  }
+
   function normalizarProducto(item) {
     if (!item || typeof item !== 'object') return null;
     const nombre = String(item.nombre || '').trim();
     if (!nombre) return null;
+
+    const materialesNormalizados = Array.isArray(item.materiales) ? item.materiales.map(x => {
+      const base = {
+        insumoId: String(x.insumoId || ''),
+        nombre: String(x.nombre || '').trim(),
+        cantidadUsada: numero(x.cantidadUsada, 0),
+        unidadUsada: String(x.unidadUsada || 'unidad'),
+        costoFinalCalculado: numero(x.costoFinalCalculado, 0),
+        cantidadCompraEquivalente: Number.isFinite(Number(x.cantidadCompraEquivalente)) ? Number(x.cantidadCompraEquivalente) : null
+      };
+      const insumo = insumoActual(base);
+      if (insumo) {
+        base.insumoId = String(insumo.id || '');
+        base.nombre = String(insumo.nombre || base.nombre).trim();
+      }
+      return base;
+    }).filter(x => x.nombre) : [];
+
     return {
       id: String(item.id || idNuevo()),
       nombre,
       foto: typeof item.foto === 'string' ? item.foto : '',
-      materiales: Array.isArray(item.materiales) ? item.materiales.map(x => {
-        const base = {
-          insumoId: String(x.insumoId || ''),
-          nombre: String(x.nombre || '').trim(),
-          cantidadUsada: numero(x.cantidadUsada, 0),
-          unidadUsada: String(x.unidadUsada || 'unidad'),
-          costoFinalCalculado: numero(x.costoFinalCalculado, 0),
-          cantidadCompraEquivalente: Number.isFinite(Number(x.cantidadCompraEquivalente)) ? Number(x.cantidadCompraEquivalente) : null
-        };
-        const insumo = insumoActual(base);
-        if (insumo) {
-          base.insumoId = String(insumo.id || '');
-          base.nombre = String(insumo.nombre || base.nombre).trim();
-        }
-        return base;
-      }).filter(x => x.nombre) : [],
+      materiales: consolidarMaterialesDuplicados(materialesNormalizados),
       empaques: Array.isArray(item.empaques) ? item.empaques.map(x => ({ nombre: String(x.nombre || ''), monto: Math.max(numero(x.monto, 0), 0) })) : [],
       formulario: item.formulario && typeof item.formulario === 'object' ? clonar(item.formulario) : {},
       currencyIndex: numero(item.currencyIndex, 0),
