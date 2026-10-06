@@ -200,10 +200,26 @@
     return Number.isFinite(n) ? Math.max(0, n) : 0;
   }
 
+  function recalcularDesdeTiempo() {
+    if (typeof globalThis.calcularPrecio === 'function') {
+      globalThis.calcularPrecio();
+    } else if (typeof calcularPrecio === 'function') {
+      calcularPrecio();
+    }
+    if (typeof globalThis.guardarDatosLocales === 'function') {
+      globalThis.guardarDatosLocales();
+    }
+  }
+
   function cambiarHoras(delta) {
     const actual = normalizarHoras(horas.value);
     const siguiente = Math.max(0, Math.round((actual + delta) * 2) / 2);
     horas.value = String(siguiente);
+
+    // Recalcular de forma explícita al usar + / -.
+    recalcularDesdeTiempo();
+
+    // Mantener eventos para cualquier otra lógica que escuche estos cambios.
     horas.dispatchEvent(new Event('input', { bubbles: true }));
     horas.dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -212,14 +228,14 @@
   btnMas.addEventListener('click', () => cambiarHoras(0.5));
 
   horas.addEventListener('input', () => {
-    if (typeof updateHorasLabel === 'function') updateHorasLabel(horas.value);
-    else if (typeof calcularPrecio === 'function') calcularPrecio();
+    // También recalcula cuando la usuaria escribe el tiempo manualmente.
+    recalcularDesdeTiempo();
   });
 
   horas.addEventListener('blur', () => {
     const valor = normalizarHoras(horas.value);
     horas.value = String(Math.round(valor * 2) / 2);
-    if (typeof updateHorasLabel === 'function') updateHorasLabel(horas.value);
+    recalcularDesdeTiempo();
   });
 
   const etiquetaHoras = grupoHoras.querySelector('label');
