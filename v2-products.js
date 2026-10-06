@@ -428,7 +428,7 @@
             <div class="producto-precio">${resumen.simbolo} ${resumen.precio.toFixed(2)}</div>
             <div class="producto-meta">Precio actual · ${nInsumos} ${nInsumos === 1 ? 'insumo' : 'insumos'}</div>
             <div class="producto-actions">
-              <button type="button" data-action="edit" data-id="${escapar(prod.id)}" aria-label="Editar ${escapar(prod.nombre)}" title="Editar">✏️</button>
+              <button type="button" data-action="edit" data-id="${escapar(prod.id)}" onclick="window.costaliaEditarProducto && window.costaliaEditarProducto('${escapar(prod.id)}'); return false;" aria-label="Editar ${escapar(prod.nombre)}" title="Editar">✏️</button>
               <button type="button" data-action="duplicate" data-id="${escapar(prod.id)}" aria-label="Duplicar ${escapar(prod.nombre)}" title="Duplicar">⧉</button>
               <button type="button" data-action="delete" data-id="${escapar(prod.id)}" aria-label="Eliminar ${escapar(prod.nombre)}" title="Eliminar">🗑️</button>
             </div>
@@ -440,24 +440,39 @@
 
   function cargarProductoEnCostear(prod) {
     if (!prod) return;
-    const resumen = calcularResumenProducto(prod);
+    try {
+      const resumen = calcularResumenProducto(prod);
 
-    materialesDelProductoActual.splice(0, materialesDelProductoActual.length, ...resumen.materialesActuales.map(clonar));
-    empaquesProducto.splice(0, empaquesProducto.length, ...prod.empaques.map(clonar));
+      materialesDelProductoActual.splice(0, materialesDelProductoActual.length, ...resumen.materialesActuales.map(clonar));
+      empaquesProducto.splice(0, empaquesProducto.length, ...prod.empaques.map(clonar));
 
-    const currency = document.getElementById('currency');
-    if (currency) currency.selectedIndex = Math.min(Math.max(numero(prod.currencyIndex, 0), 0), currency.options.length - 1);
+      const currency = document.getElementById('currency');
+      if (currency) currency.selectedIndex = Math.min(Math.max(numero(prod.currencyIndex, 0), 0), currency.options.length - 1);
 
-    if (typeof aplicarFormulario === 'function') aplicarFormulario(clonar(prod.formulario));
-    if (typeof renderizarMaterialesProducto === 'function') renderizarMaterialesProducto();
-    if (typeof renderizarEmpaques === 'function') renderizarEmpaques();
-    if (typeof calcularPrecio === 'function') calcularPrecio();
+      if (typeof aplicarFormulario === 'function') aplicarFormulario(clonar(prod.formulario));
+      if (typeof renderizarMaterialesProducto === 'function') renderizarMaterialesProducto();
+      if (typeof renderizarEmpaques === 'function') renderizarEmpaques();
 
-    productoEnEdicionId = prod.id;
-    actualizarEstadoEdicion();
-    cambiarPestana('costear');
-    showToast(`Producto abierto: ${prod.nombre}`);
+      productoEnEdicionId = prod.id;
+      actualizarEstadoEdicion();
+      cambiarPestana('costear');
+
+      if (typeof calcularPrecio === 'function') calcularPrecio();
+      showToast(`Producto abierto: ${prod.nombre}`);
+    } catch (error) {
+      console.error('No se pudo abrir el producto para editar:', error);
+      showToast('No se pudo abrir el producto para editar.', 'error');
+    }
   }
+
+  window.costaliaEditarProducto = function costaliaEditarProducto(id) {
+    const prod = productos.find(x => String(x.id) === String(id));
+    if (!prod) {
+      showToast('No se encontró el producto guardado.', 'error');
+      return;
+    }
+    cargarProductoEnCostear(prod);
+  };
 
   function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
@@ -575,7 +590,7 @@
     if (!prod) return;
 
     if (btn.dataset.action === 'edit') {
-      cargarProductoEnCostear(prod);
+      // El botón Editar ya ejecuta costaliaEditarProducto directamente.
       return;
     }
 
