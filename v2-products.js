@@ -632,6 +632,39 @@
     abrirEditorProducto(prod);
   };
 
+
+  window.costaliaActualizarInsumoEnProductos = function costaliaActualizarInsumoEnProductos(datos = {}) {
+    const insumoId = String(datos.insumoId || '');
+    const nombreAnterior = String(datos.nombreAnterior || '').trim().toLowerCase();
+    const nuevoNombre = String(datos.nuevoNombre || '').trim();
+    if (!nuevoNombre) return 0;
+
+    let actualizados = 0;
+
+    productos.forEach(producto => {
+      if (!Array.isArray(producto?.materiales)) return;
+
+      producto.materiales.forEach(material => {
+        const coincidePorId = insumoId && String(material.insumoId || '') === insumoId;
+        const coincidePorNombre = !material.insumoId && nombreAnterior &&
+          String(material.nombre || '').trim().toLowerCase() === nombreAnterior;
+
+        if (!coincidePorId && !coincidePorNombre) return;
+
+        if (insumoId) material.insumoId = insumoId;
+        material.nombre = nuevoNombre;
+        actualizados += 1;
+      });
+    });
+
+    if (actualizados > 0) {
+      guardarDatosLocales();
+      renderizarProductos();
+    }
+
+    return actualizados;
+  };
+
   function comprimirImagen(archivo) {
     return new Promise((resolve, reject) => {
       if (!archivo) return resolve('');
