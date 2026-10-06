@@ -43,7 +43,8 @@
       showToast('Respaldo importado correctamente.');
     } catch (error) {
       restaurandoDatos = false;
-      showToast('No se pudo importar el respaldo. Revisa que sea un archivo .json exportado desde Costalia.');
+      console.error('Error al aplicar respaldo de Costalia:', error);
+      showToast('No se pudo importar el respaldo. Se detectó un error al restaurar los datos.');
     }
   }
 
