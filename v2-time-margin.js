@@ -125,6 +125,22 @@
 
     .costalia-tiempo-margen .costalia-profit-row > .input-group {
       margin-bottom: 0;
+      min-width: 0;
+    }
+
+    .costalia-tiempo-margen .costalia-fijo-wrap {
+      display: block;
+      min-width: 0;
+    }
+
+    .costalia-tiempo-margen .costalia-fijo-wrap > div {
+      width: 100%;
+    }
+
+    .costalia-tiempo-margen .costalia-fijo-wrap input {
+      width: 100%;
+      min-width: 0;
+      height: 44px;
     }
 
     .costalia-tiempo-margen .range-value {
@@ -375,10 +391,24 @@
       const observarModo = () => {
         if (modoGanancia.value === 'fijo') {
           if (grupoMargen.parentElement === profitRow) grupoMargen.remove();
-          if (fijoWrap.parentElement !== profitRow) profitRow.appendChild(fijoWrap);
+
+          // En monto fijo, el campo debe quedar en la segunda columna
+          // de la misma fila que el selector, igual que ocurre con porcentaje.
+          if (fijoWrap.parentElement !== profitRow) {
+            profitRow.appendChild(fijoWrap);
+          }
+
+          grupoMargen.style.display = 'none';
+          fijoWrap.style.display = '';
         } else {
           if (fijoWrap.parentElement === profitRow) fijoWrap.remove();
-          if (grupoMargen.parentElement !== profitRow) profitRow.appendChild(grupoMargen);
+
+          if (grupoMargen.parentElement !== profitRow) {
+            profitRow.appendChild(grupoMargen);
+          }
+
+          fijoWrap.style.display = 'none';
+          grupoMargen.style.display = '';
         }
       };
 
